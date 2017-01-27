@@ -35,13 +35,12 @@ void SCKBase::begin() {
   pinMode(FACTORY, OUTPUT);
   pinMode(CONTROL, INPUT);
   digitalWrite(AWAKE, LOW); 
-  digitalWrite(FACTORY, LOW);
+  digitalWrite(FACTORY, LOW); 
 }
 
 void SCKBase::config(){
   eepromCheck();
   timer1Initialize();
-  setDeviceID();     
 }
 
 void SCKBase::eepromCheck() {
@@ -425,16 +424,106 @@ uint16_t SCKBase::getPanel(float Vref){
 }
 
 const uint16_t batTable[] = {
-  3078, 3364, 3468, 3540, 3600, 3641, 3682, 3701, 3710, 3716,
-  3716, 3716, 3720, 3714, 3720, 3725, 3732, 3742, 3739, 3744,
-  3744, 3754, 3760, 3762, 3770, 3768, 3774, 3774, 3774, 3779,
-  3784, 3790, 3788, 3794, 3798, 3798, 3804, 3809, 3809, 3812,
-  3817, 3817, 3822, 3823, 3828, 3828, 3828, 3833, 3838, 3838,
-  3842, 3847, 3852, 3859, 3858, 3864, 3862, 3869, 3877, 3877,
-  3883, 3888, 3894, 3898, 3902, 3906, 3912, 3923, 3926, 3936,
-  3942, 3946, 3960, 3972, 3979, 3982, 3991, 3997, 4002, 4002,
-  4012, 4018, 4028, 4043, 4057, 4074, 4084, 4094, 4098, 4098,
-  4109, 4115, 4123, 4134, 4142, 4153, 4158, 4170, 4180, 4188
+  3078,
+  3364,
+  3468,
+  3540,
+  3600,
+  3641,
+  3682,
+  3701,
+  3710,
+  3716,
+  3716,
+  3716,
+  3720,
+  3714,
+  3720,
+  3725,
+  3732,
+  3742,
+  3739,
+  3744,
+  3744,
+  3754,
+  3760,
+  3762,
+  3770,
+  3768,
+  3774,
+  3774,
+  3774,
+  3779,
+  3784,
+  3790,
+  3788,
+  3794,
+  3798,
+  3798,
+  3804,
+  3809,
+  3809,
+  3812,
+  3817,
+  3817,
+  3822,
+  3823,
+  3828,
+  3828,
+  3828,
+  3833,
+  3838,
+  3838,
+  3842,
+  3847,
+  3852,
+  3859,
+  3858,
+  3864,
+  3862,
+  3869,
+  3877,
+  3877,
+  3883,
+  3888,
+  3894,
+  3898,
+  3902,
+  3906,
+  3912,
+  3923,
+  3926,
+  3936,
+  3942,
+  3946,
+  3960,
+  3972,
+  3979,
+  3982,
+  3991,
+  3997,
+  4002,
+  4002,
+  4012,
+  4018,
+  4028,
+  4043,
+  4057,
+  4074,
+  4084,
+  4094,
+  4098,
+  4098,
+  4109,
+  4115,
+  4123,
+  4134,
+  4142,
+  4153,
+  4158,
+  4170,
+  4180,
+  4188
 };
 
 uint16_t SCKBase::getBattery(float Vref) {
@@ -748,37 +837,22 @@ char* SCKBase::MAC() {
   return "-1";
 }
 
-void SCKBase::setDeviceID() {
-  String mac = MAC();
+char* SCKBase::id() {
+  char* temp = MAC();  
+  byte len = strlen(temp);
   byte j = 4;
-  char deviceid[32];
-  deviceid[0] = 'S';
-  deviceid[1] = 'C';
-  deviceid[2] = 'K';
-  deviceid[3] = '_';
-  mac.replace(":","");
-  mac.toUpperCase();
-  if (mac.length() > 0 && mac != "-1") 
+  buffer[0] = 'S';
+  buffer[1] = 'C';
+  buffer[2] = 'K';
+  buffer[3] = '_';
+  for(byte i=12; i<len; i++)
   {
-    
-    byte len = mac.length();
-    for(byte i=7; i<len; i++)
-    {
-      deviceid[j] = mac.charAt(i);
-      j++;
-    }
+    if (temp[i] == ':') buffer[j] = '-';
+    else buffer[j] = temp[i];
+    j++;
   }
-  deviceid[j] = 0x00;
-  //if (enterCommandMode())
-  //{
-    sendCommand(F("set opt deviceid "), true); // Set device ID
-    sendCommand(deviceid);
-  //  exitCommandMode();
-  #if debugBASE
-    Serial.print("Device ID : ");
-    Serial.println(deviceid);
-  #endif
-  //}
+  buffer[j] = 0x00;
+  return buffer;
 }
 
 

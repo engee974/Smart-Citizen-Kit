@@ -66,7 +66,7 @@ public:
     boolean open(const char *addr, int port);
     boolean close();
     char* MAC();
-    void setDeviceID();
+    char* id();
     uint32_t scan();
     int checkWiFly();
     int getWiFlyVersion();
