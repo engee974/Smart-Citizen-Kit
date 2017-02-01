@@ -15,10 +15,16 @@
 #ifndef __SCKBASE_H__
 #define __SCKBASE_H__
 
+
+#define SCAN_BUFFER_SIZE 4
+
+#include "Constants.h"
 #include <Arduino.h>
 
+
+
 class SCKBase {
-public:
+  public:
     void begin();
     void config();
     void eepromCheck();
@@ -36,16 +42,16 @@ public:
     void writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t location);
     char* readData(uint16_t eeaddress, uint16_t pos, uint8_t location);
     uint32_t readData(uint16_t eeaddress, uint8_t location);
-    
+
     uint16_t getPanel(float Vref);
     uint16_t getBattery(float Vref);
-    
+
     /*RTC commands*/
     boolean checkRTC();
     boolean RTCadjust(char *time);
     boolean RTCtime(char *time);
     boolean RTCisValid(char *time);
-    
+
     /*Wifi commands*/
     boolean findInResponse(const char *toMatch,
                            unsigned int timeOut);
@@ -72,12 +78,16 @@ public:
     int getWiFlyVersion();
     boolean update();
     void repair();
-    
+
+    void setDebugState(boolean debugON);
+    boolean getDebugState();
+
     /*Timer commands*/
     void timer1SetPeriod(long microseconds);
     void timer1Initialize();
     void timer1Stop();
-private:
-    
+
+  private:
+    boolean _debugON;
 };
 #endif

@@ -12,7 +12,7 @@
     Smart Citizen Kit v.1.1 (Kickstarter) (ATMEGA32U4 @ 8Mhz  - Lylipad Arduino USB)
 
   Structure:
-    
+
     sck_beta_v0_9.ino - Core Runtime.
 
     SCKAmbient.h    - Supports the sensor reading and calibration functions.
@@ -20,11 +20,11 @@
     SCKServer.h     - Supports data publishing to the SmartCitizen Platform over WiFi.
 
     Constants.h             - Defines pins configuration and other static parameters.
-    AccumulatorFilter.h     - Used for battery temperature decoupling in  Smart Citizen Kit v.1.0 
-    TemperatureDecoupler.h  - Used for battery temperature decoupling in  Smart Citizen Kit v.1.0 
+    AccumulatorFilter.h     - Used for battery temperature decoupling in  Smart Citizen Kit v.1.0
+    TemperatureDecoupler.h  - Used for battery temperature decoupling in  Smart Citizen Kit v.1.0
 
   Check REAMDE.md for more information.
-    
+
 */
 
 #include <Wire.h>
@@ -32,16 +32,23 @@
 #include "SCKAmbient.h"
 
 SCKAmbient ambient;
-  
+
+ISR(TIMER1_OVF_vect)
+{
+  ambient.serialRequests();
+}
+
 void setup() {
   ambient.begin();
   ambient.ini();
   ambient.execute(true);
 }
 
-void loop() {  
+void loop() {
   ambient.execute(false);
 }
+
+
 
 
 
