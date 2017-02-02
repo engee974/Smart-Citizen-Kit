@@ -14,7 +14,11 @@
 
 */
 
+
+//#include "Constants.h"
 #include "SCKAmbient.h"
+//#include "SCKBase.h"
+//#include "SCKServer.h"
 #include <Wire.h>
 #include <EEPROM.h>
 
@@ -30,6 +34,10 @@ TemperatureDecoupler decoupler; // Compensate the bat .charger generated heat af
 #endif
 
 
+
+//SCKBase base_;
+
+//SCKAmbient ambient_;
 
 long value[SENSORS];
 char time[TIME_BUFFER_SIZE];
@@ -62,8 +70,7 @@ int lastHumidity;
 int lastTemperature;
 #endif
 
-void SCKAmbient::begin()
-{
+void SCKAmbient::begin() {
   _server = &SCKServer(_base);
   _base.begin();
 #if ((decouplerComp)&&(F_CPU > 8000000 ))
@@ -179,8 +186,7 @@ float k = (RES * (float)R1 / 100) / 1000; //Voltatge Constant for the Voltage re
   SENSOR Functions
 
 */
-void SCKAmbient::writeVH(byte device, long voltage )
-{
+void SCKAmbient::writeVH(byte device, long voltage ) {
   int data = 0;
 
 #if F_CPU == 8000000
@@ -200,8 +206,7 @@ void SCKAmbient::writeVH(byte device, long voltage )
 }
 
 
-float SCKAmbient::readVH(byte device)
-{
+float SCKAmbient::readVH(byte device) {
   int data;
 #if F_CPU == 8000000
   data = _base.readMCP(MCP1, device);
@@ -216,8 +221,7 @@ float SCKAmbient::readVH(byte device)
 
 float kr1 = ((float)P1 * 1000) / RES; //  Resistance conversion Constant for the digital pot.
 
-void SCKAmbient::writeRL(byte device, long resistor)
-{
+void SCKAmbient::writeRL(byte device, long resistor) {
   int data = 0x00;
   data = (int)(resistor / kr1);
 #if F_CPU == 8000000
@@ -236,8 +240,7 @@ float SCKAmbient::readRL(byte device)
 #endif
 }
 
-void SCKAmbient::writeRGAIN(byte device, long resistor)
-{
+void SCKAmbient::writeRGAIN(byte device, long resistor) {
   int data = 0x00;
   data = (int)(resistor / kr1);
   _base.writeMCP(MCP2, device, data);
@@ -250,15 +253,18 @@ float SCKAmbient::readRGAIN(byte device)
 
 void SCKAmbient::writeGAIN(long value)
 {
-  if (value == 100) {
+  if (value == 100)
+  {
     writeRGAIN(0x00, 10000);
     writeRGAIN(0x01, 10000);
   }
-  else if (value == 1000) {
+  else if (value == 1000)
+  {
     writeRGAIN(0x00, 10000);
     writeRGAIN(0x01, 100000);
   }
-  else if (value == 10000) {
+  else if (value == 10000)
+  {
     writeRGAIN(0x00, 100000);
     writeRGAIN(0x01, 100000);
   }
@@ -433,8 +439,7 @@ void SCKAmbient::writeADXL(byte address, byte val) {
 }
 
 //reads num bytes starting from address register on device in to buff array
-void SCKAmbient::readADXL(byte address, int num, byte buff[])
-{
+void SCKAmbient::readADXL(byte address, int num, byte buff[]) {
   Wire.beginTransmission(ADXL);     //start transmission to device
   Wire.write(address);              //writes address to read from
   Wire.endTransmission();           //end transmission
@@ -444,14 +449,16 @@ void SCKAmbient::readADXL(byte address, int num, byte buff[])
 
   int i = 0;
   unsigned long time = millis();
-  while (!Wire.available()) {
-    if ((millis() - time) > 500) {
+  while (!Wire.available())
+  {
+    if ((millis() - time) > 500)
+    {
       for (int i = 0; i < num; i++) buff[i] = 0x00;
       break;
     }
   }
-  while (Wire.available()) {
-    //device may write less than requested (abnormal)
+  while (Wire.available())           //device may write less than requested (abnormal)
+  {
     buff[i] = Wire.read();           // read a byte
     i++;
   }
@@ -470,7 +477,8 @@ void SCKAmbient::averageADXL()
   accel_y = 0;
   accel_z = 0;
 
-  for (int i = 0; i < lecturas; i++) {
+  for (int i = 0; i < lecturas; i++)
+  {
     readADXL(0x32, 6, buffADXL); //read the acceleration data from the ADXL345
     temp_x = (((int)buffADXL[1]) << 8) | buffADXL[0];
     temp_x = map(temp_x, -lim, lim, 0, 1023);
@@ -506,7 +514,8 @@ boolean SCKAmbient::getDHT22()
 {
   // Read Values
   int rv = DhtRead(IO3);
-  if (rv != true) {
+  if (rv != true)
+  {
     lastHumidity    = DHTLIB_INVALID_VALUE;  // invalid value, or is NaN prefered?
     lastTemperature = DHTLIB_INVALID_VALUE;  // invalid value
     return rv;
@@ -515,12 +524,13 @@ boolean SCKAmbient::getDHT22()
   // Convert and Store
   lastHumidity    = word(bits[0], bits[1]);
 
-  if (bits[2] & 0x80) {
-    // negative temperature
+  if (bits[2] & 0x80) // negative temperature
+  {
     lastTemperature = word(bits[2] & 0x7F, bits[3]);
     lastTemperature *= -1.0;
   }
-  else {
+  else
+  {
     lastTemperature = word(bits[2], bits[3]);
   }
 
@@ -558,7 +568,8 @@ boolean SCKAmbient::DhtRead(uint8_t pin)
     if (loopCnt-- == 0) return false;
 
   // read Ouput - 40 bits => 5 bytes
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 40; i++)
+  {
     loopCnt = TIMEOUT;
     while (digitalRead(pin) == LOW)
       if (loopCnt-- == 0) return false;
@@ -570,8 +581,8 @@ boolean SCKAmbient::DhtRead(uint8_t pin)
       if (loopCnt-- == 0) return false;
 
     if ((micros() - t) > 40) bits[idx] |= (1 << cnt);
-    if (cnt == 0) {
-      // next byte?
+    if (cnt == 0)   // next byte?
+    {
       cnt = 7;
       idx++;
     }
@@ -582,8 +593,7 @@ boolean SCKAmbient::DhtRead(uint8_t pin)
 }
 #endif
 
-uint16_t SCKAmbient::getLight()
-{
+uint16_t SCKAmbient::getLight() {
 #if F_CPU == 8000000
   uint8_t TIME0  = 0xDA;
   uint8_t GAIN0 = 0x00;
@@ -640,8 +650,8 @@ uint16_t SCKAmbient::getLight()
 }
 
 
-unsigned int SCKAmbient::getNoise()
-{
+unsigned int SCKAmbient::getNoise() {
+
 #if F_CPU == 8000000
 #define GAIN 10000
   writeGAIN(GAIN);
@@ -694,15 +704,16 @@ void SCKAmbient::updateSensors(byte mode)
   ok_read = true;
 #else
   _base.timer1Stop();
-  while ((!ok_read) && (retry < 5)) {
+  while ((!ok_read) && (retry < 5))
+  {
     ok_read = getDHT22();
     retry++;
     if (!ok_read)delay(3000);
   }
   _base.timer1Initialize();
 #endif
-  if (((millis() - timeMICS) <= 6 * minute) || (mode != ECONOMIC)) {
-    //6 minutes
+  if (((millis() - timeMICS) <= 6 * minute) || (mode != ECONOMIC)) //6 minutes
+  {
 #if F_CPU == 8000000
     getVcc();
 #endif
@@ -710,15 +721,18 @@ void SCKAmbient::updateSensors(byte mode)
     value[5] = getCO(); //ppm
     value[6] = getNO2(); //ppm
   }
-  else if ((millis() - timeMICS) >= 60 * minute) {
+  else if ((millis() - timeMICS) >= 60 * minute)
+  {
     GasSensor(true);
     timeMICS = millis();
   }
-  else {
+  else
+  {
     GasSensor(false);
   }
 
-  if (ok_read ) {
+  if (ok_read )
+  {
 #if ((decouplerComp)&&(F_CPU > 8000000 ))
     uint16_t battery = _base.getBattery(Vcc);
     decoupler.update(battery);
@@ -728,7 +742,8 @@ void SCKAmbient::updateSensors(byte mode)
 #endif
     value[1] = getHumidity();
   }
-  else {
+  else
+  {
     value[0] = 0; // ºC
     value[1] = 0; // %
   }
@@ -736,11 +751,13 @@ void SCKAmbient::updateSensors(byte mode)
   value[3] = _base.getBattery(Vcc); //%
   value[4] = _base.getPanel(Vcc);  // %
   value[7] = getNoise(); //mV
-  if (mode == NOWIFI) {
+  if (mode == NOWIFI)
+  {
     value[8] = 0;  //Wifi Nets
     _base.RTCtime(time);
   }
-  else if (mode == OFFLINE) {
+  else if (mode == OFFLINE)
+  {
     value[8] = _base.scan();  //Wifi Nets
     _base.RTCtime(time);
   }
@@ -751,8 +768,7 @@ void SCKAmbient::updateSensors(byte mode)
   return _base.debugON;
   }
 */
-void SCKAmbient::execute(boolean instant)
-{
+void SCKAmbient::execute(boolean instant) {
   if (terminal_mode) {                        // Telnet  (#data + *OPEN* detectado )
     sleep = false;
     digitalWrite(AWAKE, HIGH);
@@ -814,8 +830,7 @@ void SCKAmbient::execute(boolean instant)
   }
 }
 
-void SCKAmbient::txDebug()
-{
+void SCKAmbient::txDebug() {
   if (!_base.getDebugState()) {
     Serial.println(F("*******************"));
     float dec = 0;
@@ -849,28 +864,33 @@ void SCKAmbient::txDebug()
 
 int SCKAmbient::addData(byte inByte)
 {
-  if (_charCount > (buffer_length2)) {
+  if (_count_char > (buffer_length2))
+  {
     for (int i = 0; i < buffer_length2; i++) buffer_int[i] = 0x00;
-    _charCount = 0;
+    _count_char = 0;
     return -1;
   }
-  else if (inByte == '\r') {
-    buffer_int[_charCount] = inByte;
-    buffer_int[_charCount + 1] = 0x00;
-    _charCount = 0;
+  else if (inByte == '\r')
+  {
+    buffer_int[_count_char] = inByte;
+    buffer_int[_count_char + 1] = 0x00;
+    _count_char = 0;
     return 1;
   }
-  else if ((inByte != '\n') && (inByte != '#') && (inByte != '$')) {
-    buffer_int[_charCount] = inByte;
-    _charCount = _charCount + 1;
+  else if ((inByte != '\n') && (inByte != '#') && (inByte != '$'))
+  {
+    buffer_int[_count_char] = inByte;
+    _count_char = _count_char + 1;
     return 0;
   }
-  else if ((inByte == '#') || (inByte == '$')) {
-    buffer_int[_charCount] = inByte;
-    _charCount = _charCount + 1;
-    if (_charCount == 3) {
-      buffer_int[_charCount] = 0x00;
-      _charCount = 0;
+  else if ((inByte == '#') || (inByte == '$'))
+  {
+    buffer_int[_count_char] = inByte;
+    _count_char = _count_char + 1;
+    if (_count_char == 3)
+    {
+      buffer_int[_count_char] = 0x00;
+      _count_char = 0;
       return 1;
     }
   }
@@ -882,7 +902,8 @@ boolean SCKAmbient::printNetWorks(unsigned int address_eeprom, boolean endLine =
 {
   int nets_temp = _base.readData(EE_ADDR_NUMBER_NETS, INTERNAL);
   if (nets_temp > 0) {
-    for (int i = 0; i < nets_temp; i++) {
+    for (int i = 0; i < nets_temp; i++)
+    {
       Serial.print(_base.readData(address_eeprom, i, INTERNAL));
       if (i < (nets_temp - 1)) Serial.print(' ');
     }
@@ -894,11 +915,13 @@ void SCKAmbient::addNetWork(unsigned int address_eeprom, char* text)
 {
   int pos = 0;
   int nets_temp = _base.readData(EE_ADDR_NUMBER_NETS, INTERNAL);
-  if (address_eeprom < DEFAULT_ADDR_PASS) {
+  if (address_eeprom < DEFAULT_ADDR_PASS)
+  {
     nets_temp = nets_temp + 1;
     if (nets_temp <= 5) _base.writeData(EE_ADDR_NUMBER_NETS, nets_temp , INTERNAL);
   }
-  if (nets_temp <= 5) {
+  if (nets_temp <= 5)
+  {
     if (nets_temp == 0) pos = 0;
     else pos = nets_temp - 1;
     _base.writeData(address_eeprom, pos, text, INTERNAL);
@@ -917,7 +940,8 @@ void SCKAmbient::serialRequests()
   sei();
   _base.timer1Stop();
 #if F_CPU == 8000000
-  if (!digitalRead(CONTROL)) {
+  if (!digitalRead(CONTROL))
+  {
     digitalWrite(AWAKE, HIGH);
     digitalWrite(FACTORY, HIGH);
     sleep = false;
@@ -925,10 +949,12 @@ void SCKAmbient::serialRequests()
   }
   else digitalWrite(AWAKE, LOW);
 #endif
-  if (Serial.available()) {
+  if (Serial.available())
+  {
     byte inByte = Serial.read();
     int check_data = addData(inByte);
-    if (check_data == 1) {
+    if (check_data == 1)
+    {
       if (_base.checkText("###", buffer_int)) {
         _base.setDebugState(true);  //Terminal SCK ON
         temp_mode = sensor_mode;
@@ -940,8 +966,8 @@ void SCKAmbient::serialRequests()
         sensor_mode = temp_mode;
         _base.setDebugState(false);
       }
-      else if (_base.checkText("$$$", buffer_int)) {
-        //Terminal WIFI ON
+      else if (_base.checkText("$$$", buffer_int))  //Terminal WIFI ON
+      {
         digitalWrite(AWAKE, HIGH);
         delayMicroseconds(100);
         digitalWrite(AWAKE, LOW);
@@ -951,83 +977,73 @@ void SCKAmbient::serialRequests()
         else Serial.println(F("Please, wait wifly sleep"));
         _base.setDebugState(true);
       }
-      /*READING commands*/
-      else if (_base.checkText("get ", buffer_int)) {
-        /*GET*/
-        if (_base.checkText("sck info\r", buffer_int))            Serial.println(FirmWare);
-        else if (_base.checkText("wifi info\r", buffer_int))      Serial.println(_base.getWiFlyVersion());
-        else if (_base.checkText("mac\r", buffer_int))            Serial.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL));
-        else if (_base.checkText("wlan ", buffer_int)) {
-          /*WLAN*/
-          if (_base.checkText("ssid\r", buffer_int))              printNetWorks(DEFAULT_ADDR_SSID, true);
-          else if (_base.checkText("phrase\r", buffer_int))       printNetWorks(DEFAULT_ADDR_PASS, true);
-          else if (_base.checkText("auth\r", buffer_int))         printNetWorks(DEFAULT_ADDR_AUTH, true);
-          else if (_base.checkText("ext_antenna\r", buffer_int))  printNetWorks(DEFAULT_ADDR_ANTENNA, true);
-        } /*END of WLAN*/
-        else if (_base.checkText("mode sensor\r", buffer_int))        Serial.println(_base.readData(EE_ADDR_SENSOR_MODE, INTERNAL));
-        else if (_base.checkText("time update\r", buffer_int))        Serial.println(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
-        else if (_base.checkText("number updates\r", buffer_int))     Serial.println(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
-        else if (_base.checkText("apikey\r", buffer_int))             Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
-        else if (_base.checkText("all\r", buffer_int)) {
-          Serial.print(F("|"));
-          Serial.print(FirmWare);
-          Serial.print(F("|"));
-          Serial.print(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC
-          Serial.print(F("|"));
-          printNetWorks(DEFAULT_ADDR_SSID, false);
-          Serial.print(F(","));
-          printNetWorks(DEFAULT_ADDR_PASS, false);
-          Serial.print(F(","));
-          printNetWorks(DEFAULT_ADDR_ANTENNA, false);
-          Serial.print(F(","));
-          printNetWorks(DEFAULT_ADDR_AUTH, false);
-          Serial.print(F("|"));
-          Serial.print(networks);
-          Serial.print(F("|"));
-          Serial.print(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
-          Serial.print(F("|"));
-          Serial.print(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
-          Serial.println(F("|"));
-        }
-      } /*END of GET*/
-      else if (_base.checkText("post data\r", buffer_int)) execute(true);
-      /*END of READING commands*/
-      /*WRINTING commands*/
-      else if (_base.checkText("set ", buffer_int)) {
-        /*SET*/
-        if (_base.checkText("wlan ", buffer_int)) {
-          /*WLAN*/
-          if (_base.checkText("ssid ", buffer_int)) {
-            addNetWork(DEFAULT_ADDR_SSID, buffer_int);
-            sensor_mode = _base.readData(EE_ADDR_SENSOR_MODE, INTERNAL);
-            if (TimeUpdate < 60) sleep = false;
-            else sleep = true;
-          }
-          else if (_base.checkText("phrase ", buffer_int)) addNetWork(DEFAULT_ADDR_PASS, buffer_int);
-          else if (_base.checkText("key ", buffer_int)) addNetWork(EE_ADDR_NUMBER_NETS, buffer_int);
-          else if (_base.checkText("ext_antenna ", buffer_int))  addNetWork(DEFAULT_ADDR_ANTENNA, buffer_int);
-          else if (_base.checkText("auth ", buffer_int)) addNetWork(DEFAULT_ADDR_AUTH, buffer_int);
-        } /*END of WLAN*/
-        else if (_base.checkText("mode sensor ", buffer_int)) _base.writeData(EE_ADDR_SENSOR_MODE, atol(buffer_int), INTERNAL);
-        else if (_base.checkText("time update ", buffer_int)) {
-          TimeUpdate = atol(buffer_int);
-          _base.writeData(EE_ADDR_TIME_UPDATE, TimeUpdate, INTERNAL);
-        }
-        else if (_base.checkText("number updates ", buffer_int)) _base.writeData(EE_ADDR_NUMBER_UPDATES, atol(buffer_int), INTERNAL);
-        else if (_base.checkText("apikey ", buffer_int)) {
-          //eeprom_write_ok = true;
-          //address_eeprom = EE_ADDR_APIKEY; //and what next ?
-        }
-      } /*END of SET*/
+      /*Reading commands*/
+      else if (_base.checkText("get sck info\r", buffer_int))           Serial.println(FirmWare);
+      else if (_base.checkText("get wifi info\r", buffer_int))          Serial.println(_base.getWiFlyVersion());
+      else if (_base.checkText("get mac\r", buffer_int))                Serial.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL));
+      else if (_base.checkText("get wlan ssid\r", buffer_int))          printNetWorks(DEFAULT_ADDR_SSID, true);
+      else if (_base.checkText("get wlan phrase\r", buffer_int))        printNetWorks(DEFAULT_ADDR_PASS, true);
+      else if (_base.checkText("get wlan auth\r", buffer_int))          printNetWorks(DEFAULT_ADDR_AUTH, true);
+      else if (_base.checkText("get wlan ext_antenna\r", buffer_int))   printNetWorks(DEFAULT_ADDR_ANTENNA, true);
+      else if (_base.checkText("get mode sensor\r", buffer_int))        Serial.println(_base.readData(EE_ADDR_SENSOR_MODE, INTERNAL));
+      else if (_base.checkText("get time update\r", buffer_int))        Serial.println(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
+      else if (_base.checkText("get number updates\r", buffer_int))     Serial.println(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
+      else if (_base.checkText("get apikey\r", buffer_int))             Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
+      else if (_base.checkText("get all\r", buffer_int)) {
+        Serial.print(F("|"));
+        Serial.print(FirmWare);
+        Serial.print(F("|"));
+        Serial.print(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC
+        Serial.print(F("|"));
+        printNetWorks(DEFAULT_ADDR_SSID, false);
+        Serial.print(F(","));
+        printNetWorks(DEFAULT_ADDR_PASS, false);
+        Serial.print(F(","));
+        printNetWorks(DEFAULT_ADDR_ANTENNA, false);
+        Serial.print(F(","));
+        printNetWorks(DEFAULT_ADDR_AUTH, false);
+        Serial.print(F("|"));
+        Serial.print(networks);
+        Serial.print(F("|"));
+        Serial.print(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
+        Serial.print(F("|"));
+        Serial.print(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
+        Serial.println(F("|"));
+      } else if (_base.checkText("post data\r", buffer_int)) {
+        execute(true);
+      }
+      /*Write commands*/
+      else if (_base.checkText("set wlan ssid ", buffer_int))
+      {
+        addNetWork(DEFAULT_ADDR_SSID, buffer_int);
+        sensor_mode = _base.readData(EE_ADDR_SENSOR_MODE, INTERNAL);
+        if (TimeUpdate < 60) sleep = false;
+        else sleep = true;
+      }
+      else if (_base.checkText("set wlan phrase ", buffer_int)) addNetWork(DEFAULT_ADDR_PASS, buffer_int);
+      else if (_base.checkText("set wlan key ", buffer_int)) addNetWork(EE_ADDR_NUMBER_NETS, buffer_int);
+      else if (_base.checkText("set wlan ext_antenna ", buffer_int))  addNetWork(DEFAULT_ADDR_ANTENNA, buffer_int);
+      else if (_base.checkText("set wlan auth ", buffer_int)) addNetWork(DEFAULT_ADDR_AUTH, buffer_int);
       else if (_base.checkText("clear nets\r", buffer_int)) _base.writeData(EE_ADDR_NUMBER_NETS, networks, INTERNAL);
+      else if (_base.checkText("set mode sensor ", buffer_int)) _base.writeData(EE_ADDR_SENSOR_MODE, atol(buffer_int), INTERNAL);
+      else if (_base.checkText("set time update ", buffer_int)) {
+        TimeUpdate = atol(buffer_int);
+        _base.writeData(EE_ADDR_TIME_UPDATE, TimeUpdate, INTERNAL);
+      }
+      else if (_base.checkText("set number updates ", buffer_int)) _base.writeData(EE_ADDR_NUMBER_UPDATES, atol(buffer_int), INTERNAL);
+      else if (_base.checkText("set apikey ", buffer_int)) {
+        //eeprom_write_ok = true;
+        //address_eeprom = EE_ADDR_APIKEY; //and what next ?
+      }
       else if (_base.checkText("clear memory\r", buffer_int)) _base.clearmemory();
-      /*END of Write commands*/
     }
     else if (check_data == -1) Serial.println("Invalid command.");
     if (serial_bridge) Serial1.write(inByte);
   }
-  else if (serial_bridge) {
-    if (Serial1.available()) {
+  else if (serial_bridge)
+  {
+    if (Serial1.available())
+    {
       byte inByte = Serial1.read();
       Serial.write(inByte);
     }

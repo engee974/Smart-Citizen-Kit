@@ -17,7 +17,7 @@
     DEBUGGING
 */
 #define debugEnabled      true
-#define debugBase         false
+#define debugBASE         false
 #define debugServer       false
 #define debugAmbient      false
 

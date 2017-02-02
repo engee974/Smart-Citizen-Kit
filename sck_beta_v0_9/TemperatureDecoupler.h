@@ -10,7 +10,6 @@
 
 #define BATTERY_HEATUP_MAX			11
 #define BATTERY_CHARGE_THRESHOLD	980
-
 #include <Arduino.h>
 #include "AccumulatorFilter.h"
 
