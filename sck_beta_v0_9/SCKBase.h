@@ -21,7 +21,9 @@
 #include "Constants.h"
 #include <Arduino.h>
 
-
+static uint32_t baud[7] = {
+  2400, 4800, 9600, 19200, 38400, 57600, 115200
+};
 
 class SCKBase {
   public:
@@ -53,15 +55,10 @@ class SCKBase {
     boolean RTCisValid(char *time);
 
     /*Wifi commands*/
-    boolean findInResponse(const char *toMatch,
-                           unsigned int timeOut);
+    boolean findInResponse(const char *toMatch, unsigned int timeOut);
     void skipRemainderOfResponse(unsigned int timeOut);
-    boolean sendCommand(const __FlashStringHelper *command,
-                        boolean isMultipartCommand,
-                        const char *expectedResponse);
-    boolean sendCommand(const char *command,
-                        boolean isMultipartCommand,
-                        const char *expectedResponse);
+    boolean sendCommand(const __FlashStringHelper *command, boolean isMultipartCommand, const char *expectedResponse);
+    boolean sendCommand(const char *command, boolean isMultipartCommand, const char *expectedResponse);
     boolean enterCommandMode();
     boolean sleep();
     boolean reset();
