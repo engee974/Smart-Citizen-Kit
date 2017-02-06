@@ -14,64 +14,64 @@
 #include "AccumulatorFilter.h"
 
 
-class TemperatureDecoupler{
+class TemperatureDecoupler {
 
   public:
-  
-	void setup(){
-		_prevBattery = 0;
-		filter.setup(0.3);
-	}
 
-	void update( uint16_t battery ){
+    void setup() {
+      _prevBattery = 0;
+      filter.setup(0.3);
+    }
 
-		//Serial.println( "# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #" );
+    void update( uint16_t battery ) {
 
-		bool charging = false;
-		bool doNothing = false;
-		if (battery == _prevBattery){
-			//doNothing;
-			if ( battery > BATTERY_CHARGE_THRESHOLD ){
-				charging = true;
-				//Serial.println( "Battery same val > 980! charging!");
-			}else{
-				charging = false;
-				//Serial.println( "Battery same val < 980! NOT charging!");
-			}
-		}else{
-			if ( battery > _prevBattery || battery > BATTERY_CHARGE_THRESHOLD ){ //battery is charging!
-				//Serial.println( "Battery charging!");
-				charging = true;
-			}else{ //battery is being drained
-				//Serial.println( "Battery dis-charging!");
-				charging = false;
-			}
-		}
+      //Serial.println( "# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #" );
 
-		if (!doNothing){
-			if(charging)
-				filter.goUp();
-			else
-				filter.goDown();
-		}
+      bool charging = false;
+      bool doNothing = false;
+      if (battery == _prevBattery) {
+        //doNothing;
+        if ( battery > BATTERY_CHARGE_THRESHOLD ) {
+          charging = true;
+          //Serial.println( "Battery same val > 980! charging!");
+        } else {
+          charging = false;
+          //Serial.println( "Battery same val < 980! NOT charging!");
+        }
+      } else {
+        if ( battery > _prevBattery || battery > BATTERY_CHARGE_THRESHOLD ) { //battery is charging!
+          //Serial.println( "Battery charging!");
+          charging = true;
+        } else { //battery is being drained
+          //Serial.println( "Battery dis-charging!");
+          charging = false;
+        }
+      }
 
-		//Serial.print(F("battery: ")); Serial.println( battery );
-		//Serial.print(F("_prevBattery: ")); Serial.println( _prevBattery );
-		//Serial.print(F("filter: ")); Serial.println( filter.getVal() );
+      if (!doNothing) {
+        if (charging)
+          filter.goUp();
+        else
+          filter.goDown();
+      }
 
-		//Serial.println( "# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #" );
-		//store last bat reading for future comparing
-		_prevBattery = battery;
-		lastChargingState = charging;
-	}
+      //Serial.print(F("battery: ")); Serial.println( battery );
+      //Serial.print(F("_prevBattery: ")); Serial.println( _prevBattery );
+      //Serial.print(F("filter: ")); Serial.println( filter.getVal() );
 
-	short int getCompensation(){
-		return (short int) (filter.getVal() * BATTERY_HEATUP_MAX);
-	}
+      //Serial.println( "# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #" );
+      //store last bat reading for future comparing
+      _prevBattery = battery;
+      lastChargingState = charging;
+    }
 
-	short int _prevBattery;
-	AccumulatorFilter filter;
-	bool lastChargingState; //true == up, false == down
+    short int getCompensation() {
+      return (short int) (filter.getVal() * BATTERY_HEATUP_MAX);
+    }
+
+    short int _prevBattery;
+    AccumulatorFilter filter;
+    bool lastChargingState; //true == up, false == down
 
 };
 
