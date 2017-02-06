@@ -7,7 +7,6 @@
 #ifndef __CONSTANTS_H__
 #define __CONSTANTS_H__
 
-//#define NEW(_instance,_class) *(_instance=(_class*)malloc(sizeof(_class)))=_class
 
 #define decouplerComp     false   //Only for version Goteo 1.0
 

@@ -78,9 +78,9 @@ class SCKAmbient {
     int addData(byte inByte);
     boolean printNetWorks(unsigned int address_eeprom, boolean endLine);
     void addNetWork(unsigned int address_eeprom, char* text);
+    boolean checkText(char* text1, char* text2); 
     SCKBase _base;
     SCKServer* _server;
 
-    byte _count_char = 0;
 };
 #endif
