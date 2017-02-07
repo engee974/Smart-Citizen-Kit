@@ -14,13 +14,9 @@
 
 */
 
-
-//#include "Constants.h"
-#include "SCKAmbient.h"
-//#include "SCKBase.h"
-//#include "SCKServer.h"
 #include <Wire.h>
 #include <EEPROM.h>
+#include "SCKAmbient.h"
 
 /*
 
@@ -980,32 +976,22 @@ void SCKAmbient::serialRequests()
       }
       /*Reading commands*/
       else if (_base.checkText("get ", buffer_int)) {
-        if (_base.checkText("sck info", buffer_int))
-          Serial.println(FirmWare);
-        else if (_base.checkText("wifi info", buffer_int))
-          Serial.println(_base.getWiFlyVersion());
+        if (_base.checkText("sck info", buffer_int)) Serial.println(FirmWare);
+        else if (_base.checkText("wifi info", buffer_int)) Serial.println(_base.getWiFlyVersion());
         else if (_base.checkText("mac", buffer_int)) {
           Serial.print(F("Debug"));
           Serial.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL));
         }
         else if (_base.checkText("wlan ", buffer_int)) {
-          if (_base.checkText("ssid", buffer_int))
-            printNetWorks(DEFAULT_ADDR_SSID, true);
-          else if (_base.checkText("phrase", buffer_int))
-            printNetWorks(DEFAULT_ADDR_PASS, true);
-          else if (_base.checkText("auth", buffer_int))
-            printNetWorks(DEFAULT_ADDR_AUTH, true);
-          else if (_base.checkText("ext_antenna", buffer_int))
-            printNetWorks(DEFAULT_ADDR_ANTENNA, true);
+          if (_base.checkText("ssid", buffer_int)) printNetWorks(DEFAULT_ADDR_SSID, true);
+          else if (_base.checkText("phrase", buffer_int)) printNetWorks(DEFAULT_ADDR_PASS, true);
+          else if (_base.checkText("auth", buffer_int)) printNetWorks(DEFAULT_ADDR_AUTH, true);
+          else if (_base.checkText("ext_antenna", buffer_int)) printNetWorks(DEFAULT_ADDR_ANTENNA, true);
         }
-        else if (_base.checkText("mode sensor", buffer_int))
-          Serial.println(_base.readData(EE_ADDR_SENSOR_MODE, INTERNAL));
-        else if (_base.checkText("time update", buffer_int))
-          Serial.println(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
-        else if (_base.checkText("number updates", buffer_int))
-          Serial.println(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
-        else if (_base.checkText("apikey", buffer_int))
-          Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
+        else if (_base.checkText("mode sensor", buffer_int)) Serial.println(_base.readData(EE_ADDR_SENSOR_MODE, INTERNAL));
+        else if (_base.checkText("time update", buffer_int)) Serial.println(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
+        else if (_base.checkText("number updates", buffer_int)) Serial.println(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
+        else if (_base.checkText("apikey", buffer_int)) Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
         else if (_base.checkText("all", buffer_int)) {
           Serial.print(F("|"));
           Serial.print(FirmWare);
@@ -1040,32 +1026,24 @@ void SCKAmbient::serialRequests()
             if (TimeUpdate < 60) sleep = false;
             else sleep = true;
           }
-          else if (_base.checkText("phrase ", buffer_int))
-            addNetWork(DEFAULT_ADDR_PASS, buffer_int);
-          else if (_base.checkText("key ", buffer_int))
-            addNetWork(EE_ADDR_NUMBER_NETS, buffer_int);
-          else if (_base.checkText("ext_antenna ", buffer_int))
-            addNetWork(DEFAULT_ADDR_ANTENNA, buffer_int);
-          else if (_base.checkText("auth ", buffer_int))
-            addNetWork(DEFAULT_ADDR_AUTH, buffer_int);
+          else if (_base.checkText("phrase ", buffer_int)) addNetWork(DEFAULT_ADDR_PASS, buffer_int);
+          else if (_base.checkText("key ", buffer_int)) addNetWork(EE_ADDR_NUMBER_NETS, buffer_int);
+          else if (_base.checkText("ext_antenna ", buffer_int)) addNetWork(DEFAULT_ADDR_ANTENNA, buffer_int);
+          else if (_base.checkText("auth ", buffer_int)) addNetWork(DEFAULT_ADDR_AUTH, buffer_int);
         }
-        else if (_base.checkText("mode sensor ", buffer_int))
-          _base.writeData(EE_ADDR_SENSOR_MODE, atol(buffer_int), INTERNAL);
+        else if (_base.checkText("mode sensor ", buffer_int)) _base.writeData(EE_ADDR_SENSOR_MODE, atol(buffer_int), INTERNAL);
         else if (_base.checkText("time update ", buffer_int)) {
           TimeUpdate = atol(buffer_int);
           _base.writeData(EE_ADDR_TIME_UPDATE, TimeUpdate, INTERNAL);
         }
-        else if (_base.checkText("set number updates ", buffer_int))
-          _base.writeData(EE_ADDR_NUMBER_UPDATES, atol(buffer_int), INTERNAL);
+        else if (_base.checkText("set number updates ", buffer_int)) _base.writeData(EE_ADDR_NUMBER_UPDATES, atol(buffer_int), INTERNAL);
         else if (_base.checkText("set apikey ", buffer_int)) {
           //eeprom_write_ok = true;
           //address_eeprom = EE_ADDR_APIKEY; //and what next ?
         }
       }
-      else if (_base.checkText("clear memory\r", buffer_int))
-        _base.clearmemory();
-      else if (_base.checkText("clear nets\r", buffer_int))
-        _base.writeData(EE_ADDR_NUMBER_NETS, networks, INTERNAL);
+      else if (_base.checkText("clear memory\r", buffer_int)) _base.clearmemory();
+      else if (_base.checkText("clear nets\r", buffer_int)) _base.writeData(EE_ADDR_NUMBER_NETS, networks, INTERNAL);
     }
     else if (check_data == -1) Serial.println("Invalid command.");
     if (serial_bridge) Serial1.write(inByte);

@@ -23,10 +23,10 @@
 #ifndef __SCKAMBIENT_H__
 #define __SCKAMBIENT_H__
 
+#include <Arduino.h>
 #include "Constants.h"
 #include "SCKBase.h"
 #include "SCKServer.h"
-#include <Arduino.h>
 
 class SCKAmbient {
   public:

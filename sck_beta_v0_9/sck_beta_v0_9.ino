@@ -38,13 +38,15 @@ ISR(TIMER1_OVF_vect)
   ambient.serialRequests();
 }
 
-void setup() {
+void setup()
+{
   ambient.begin();
   ambient.ini();
   ambient.execute(true);
 }
 
-void loop() {
+void loop()
+{
   ambient.execute(false);
 }
 

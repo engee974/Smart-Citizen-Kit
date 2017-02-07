@@ -4,13 +4,12 @@
 
 */
 
-
 #ifndef __SCKSERVER_H__
 #define __SCKSERVER_H__
 
+#include <Arduino.h>
 #include "Constants.h"
 #include "SCKBase.h"
-#include <Arduino.h>
 
 class SCKServer {
   public:

@@ -16,8 +16,8 @@
 #include <Wire.h>
 #include <EEPROM.h>
 
-
-void SCKBase::begin() {
+void SCKBase::begin()
+{
   _debugON = true;
   Wire.begin();
   TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
@@ -35,12 +35,14 @@ void SCKBase::begin() {
   digitalWrite(FACTORY, LOW);
 }
 
-void SCKBase::config() {
+void SCKBase::config()
+{
   eepromCheck();
   timer1Initialize();
 }
 
-void SCKBase::eepromCheck() {
+void SCKBase::eepromCheck()
+{
   //do a clearmemory only if needed
   digitalWrite(AWAKE, HIGH);
   boolean doClearMemory = false;
@@ -77,7 +79,8 @@ void SCKBase::eepromCheck() {
 #endif
 }
 
-void SCKBase::clearmemory() {
+void SCKBase::clearmemory()
+{
   for (uint16_t i = 0; i < (DEFAULT_ADDR_ANTENNA + 160); i++) EEPROM.write(i, 0x00); // Memory erasing
   writeData(EE_ADDR_SENSOR_MODE, DEFAULT_MODE_SENSOR, INTERNAL);
   writeData(EE_ADDR_TIME_UPDATE, DEFAULT_TIME_UPDATE, INTERNAL);
@@ -85,12 +88,12 @@ void SCKBase::clearmemory() {
   writeData(EE_ADDR_MAC, 0, MAC(), INTERNAL);
 }
 
-float SCKBase::average(int anaPin) {
+float SCKBase::average(int anaPin)
+{
   int lecturas = 100;
   long total = 0;
   float average = 0;
-  for (int i = 0; i < lecturas; i++)
-  {
+  for (int i = 0; i < lecturas; i++) {
     //delay(1);
     total = total + analogRead(anaPin);
   }
@@ -103,17 +106,14 @@ boolean SCKBase::checkText(char* text, char *text1)
   byte check = 0;
   byte limit = strlen(text);
   int i = 0;
-  for (i = 0; ((i < strlen(text1)) && (check < limit)); i++)
-  {
+  for (i = 0; ((i < strlen(text1)) && (check < limit)); i++) {
     if (text[check] == text1[i]) check++;
     else check = 0;
   }
-  if (check == limit)
-  {
+  if (check == limit) {
     limit = strlen(text1);
     int j = 0;
-    for (j = 0; ((i < limit) && (text1[i] != 0x00)); j++)
-    {
+    for (j = 0; ((i < limit) && (text1[i] != 0x00)); j++) {
       if (text1[i] == '\r') text1[j] = 0x00;
       else text1[j] = text1[i];
       i++;
@@ -126,10 +126,8 @@ boolean SCKBase::checkText(char* text, char *text1)
 boolean SCKBase::compareData(char* text, char* text1)
 {
   if ((strlen(text)) != (strlen(text1))) return false;
-  else
-  {
-    for (int i = 0; i < strlen(text); i++)
-    {
+  else {
+    for (int i = 0; i < strlen(text); i++) {
       if (text[i] != text1[i]) return false;
     }
   }
@@ -138,7 +136,8 @@ boolean SCKBase::compareData(char* text, char* text1)
 
 float kr = ((float)P1 * 1000) / RES; //  Resistance conversion Constant for the digital pot.
 
-void SCKBase::writeMCP(byte deviceaddress, byte address, int data ) {
+void SCKBase::writeMCP(byte deviceaddress, byte address, int data )
+{
   if (data > RES) data = RES;
   Wire.beginTransmission(deviceaddress);
   address = (address << 4) | bitRead(data, 8) ;
@@ -148,7 +147,8 @@ void SCKBase::writeMCP(byte deviceaddress, byte address, int data ) {
   delay(4);
 }
 
-int SCKBase::readMCP(int deviceaddress, uint16_t address ) {
+int SCKBase::readMCP(int deviceaddress, uint16_t address )
+{
   byte rdata = 0xFF;
   int  data = 0x0000;
   Wire.beginTransmission(deviceaddress);
@@ -168,7 +168,8 @@ int SCKBase::readMCP(int deviceaddress, uint16_t address ) {
 
 #if F_CPU == 8000000
 #define MCP3               0x2D    // Direction of the mcp3 Ajust the battary charge
-float SCKBase::readCharge() {
+float SCKBase::readCharge()
+{
   float resistor = kr * readMCP(MCP3, 0x00) / 1000;
   float current = 1000. / (2 + ((resistor * 10) / (resistor + 10)));
 #if debugBASE
@@ -182,7 +183,8 @@ float SCKBase::readCharge() {
   return (current);
 }
 
-void SCKBase::writeCharge(int current) {
+void SCKBase::writeCharge(int current)
+{
   if (current < 100) current = 100;
   else if (current > 500) current = 500;
   float Rp = (1000. / current) - 2;
@@ -202,7 +204,8 @@ void SCKBase::writeCharge(int current) {
 }
 #endif
 
-void SCKBase::writeEEPROM(uint16_t eeaddress, uint8_t data) {
+void SCKBase::writeEEPROM(uint16_t eeaddress, uint8_t data)
+{
   uint8_t retry = 0;
   while ((readEEPROM(eeaddress) != data) && (retry < 10))
   {
@@ -216,7 +219,8 @@ void SCKBase::writeEEPROM(uint16_t eeaddress, uint8_t data) {
   }
 }
 
-byte SCKBase::readEEPROM(uint16_t eeaddress) {
+byte SCKBase::readEEPROM(uint16_t eeaddress)
+{
   byte rdata = 0xFF;
   Wire.beginTransmission(E2PROM);
   Wire.write((byte)(eeaddress >> 8));   // MSB
@@ -241,17 +245,13 @@ void SCKBase::writeData(uint32_t eeaddress, long data, uint8_t location)
 void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t location)
 {
   uint16_t eeaddressfree = eeaddress + buffer_length * pos;
-  if (location == EXTERNAL)
-  {
+  if (location == EXTERNAL){
     for (uint16_t i = eeaddressfree; i < (eeaddressfree + buffer_length); i++) writeEEPROM(i, 0x00);
     for (uint16_t i = eeaddressfree; text[i - eeaddressfree] != 0x00; i++) writeEEPROM(i, text[i - eeaddressfree]);
   }
-  else
-  {
-
+  else{
     for (uint16_t i = eeaddressfree; i < (eeaddressfree + buffer_length); i++) EEPROM.write(i, 0x00);
-    for (uint16_t i = eeaddressfree; text[i - eeaddressfree] != 0x00; i++)
-    {
+    for (uint16_t i = eeaddressfree; text[i - eeaddressfree] != 0x00; i++) {
       if (eeaddressfree >= DEFAULT_ADDR_SSID) if (text[i - eeaddressfree] == ' ') text[i - eeaddressfree] = '$';
       EEPROM.write(i, text[i - eeaddressfree]);
     }
@@ -261,8 +261,7 @@ void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t lo
 uint32_t SCKBase::readData(uint16_t eeaddress, uint8_t location)
 {
   uint32_t data = 0;
-  for (int i = 0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; i++){
     if (location == EXTERNAL)  data = data + (uint32_t)((uint32_t)readEEPROM(eeaddress + i) << ((3 - i) * 8));
     else data = data + (uint32_t)((uint32_t)EEPROM.read(eeaddress + i) << ((3 - i) * 8));
   }
@@ -273,20 +272,16 @@ char* SCKBase::readData(uint16_t eeaddress, uint16_t pos, uint8_t location)
 {
   eeaddress = eeaddress + buffer_length * pos;
   uint16_t i;
-  if (location == EXTERNAL)
-  {
+  if (location == EXTERNAL){
     uint8_t temp = readEEPROM(eeaddress);
-    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++)
-    {
+    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++){
       buffer[i - eeaddress] = readEEPROM(i);
       temp = readEEPROM(i + 1);
     }
   }
-  else
-  {
+  else{
     uint8_t temp = EEPROM.read(eeaddress);
-    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++)
-    {
+    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++){
       buffer[i - eeaddress] = EEPROM.read(i);
       temp = EEPROM.read(i + 1);
     }
@@ -295,7 +290,8 @@ char* SCKBase::readData(uint16_t eeaddress, uint16_t pos, uint8_t location)
   return buffer;
 }
 
-boolean SCKBase::checkRTC() {
+boolean SCKBase::checkRTC()
+{
   Wire.beginTransmission(RTC_ADDRESS);
   Wire.write(0x00); //Address
   Wire.endTransmission();
@@ -307,24 +303,22 @@ boolean SCKBase::checkRTC() {
   return true;
 }
 
-boolean SCKBase::RTCadjust(char *time) {
+boolean SCKBase::RTCadjust(char *time)
+{
   byte rtc[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   byte count = 0x00;
   byte data_count = 0;
-  while (time[count] != 0x00)
-  {
+  while (time[count] != 0x00){
     if (time[count] == '-') data_count++;
     else if (time[count] == ' ') data_count++;
     else if (time[count] == ':') data_count++;
-    else if ((time[count] >= '0') && (time[count] <= '9'))
-    {
+    else if ((time[count] >= '0') && (time[count] <= '9')){
       rtc[data_count] = (rtc[data_count] << 4) | (0x0F & time[count]);
     }
     else break;
     count++;
   }
-  if (data_count == 5)
-  {
+  if (data_count == 5){
 #if F_CPU == 8000000
     Wire.beginTransmission(RTC_ADDRESS);
     Wire.write((int)0);
@@ -360,7 +354,8 @@ boolean SCKBase::RTCadjust(char *time) {
   return false;
 }
 
-boolean SCKBase::RTCtime(char *time) {
+boolean SCKBase::RTCtime(char *time)
+{
   Wire.beginTransmission(RTC_ADDRESS);
   Wire.write((int)0);
   Wire.endTransmission();
@@ -395,14 +390,16 @@ boolean SCKBase::RTCtime(char *time) {
   return true;
 }
 
-boolean SCKBase::RTCisValid(char *time) {
+boolean SCKBase::RTCisValid(char *time)
+{
   RTCtime(time);
   //If year is 2016 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
   if (time[0] == '2' && time[1] == '0' && time[2] == '1' && time[3] == '6') return true;
   return false;
 }
 
-uint16_t SCKBase::getPanel(float Vref) {
+uint16_t SCKBase::getPanel(float Vref)
+{
 #if F_CPU == 8000000
   uint16_t value = 11 * average(PANEL) * Vref / 1023.;
   if (value > 500) value = value + 120; //Voltage protection diode
@@ -421,109 +418,30 @@ uint16_t SCKBase::getPanel(float Vref) {
 }
 /*
   const uint16_t batTable[] = {
-  3078,
-  3364,
-  3468,
-  3540,
-  3600,
-  3641,
-  3682,
-  3701,
-  3710,
-  3716,
-  3716,
-  3716,
-  3720,
-  3714,
-  3720,
-  3725,
-  3732,
-  3742,
-  3739,
-  3744,
-  3744,
-  3754,
-  3760,
-  3762,
-  3770,
-  3768,
-  3774,
-  3774,
-  3774,
-  3779,
-  3784,
-  3790,
-  3788,
-  3794,
-  3798,
-  3798,
-  3804,
-  3809,
-  3809,
-  3812,
-  3817,
-  3817,
-  3822,
-  3823,
-  3828,
-  3828,
-  3828,
-  3833,
-  3838,
-  3838,
-  3842,
-  3847,
-  3852,
-  3859,
-  3858,
-  3864,
-  3862,
-  3869,
-  3877,
-  3877,
-  3883,
-  3888,
-  3894,
-  3898,
-  3902,
-  3906,
-  3912,
-  3923,
-  3926,
-  3936,
-  3942,
-  3946,
-  3960,
-  3972,
-  3979,
-  3982,
-  3991,
-  3997,
-  4002,
-  4002,
-  4012,
-  4018,
-  4028,
-  4043,
-  4057,
-  4074,
-  4084,
-  4094,
-  4098,
-  4098,
-  4109,
-  4115,
-  4123,
-  4134,
-  4142,
-  4153,
-  4158,
-  4170,
-  4180,
-  4188
+  3078, 3364, 3468, 3540, 3600,
+  3641, 3682, 3701, 3710, 3716,
+  3716, 3716, 3720, 3714, 3720,
+  3725, 3732, 3742, 3739, 3744,
+  3744, 3754, 3760, 3762, 3770,
+  3768, 3774, 3774, 3774, 3779,
+  3784, 3790, 3788, 3794, 3798,
+  3798, 3804, 3809, 3809, 3812,
+  3817, 3817, 3822, 3823, 3828,
+  3828, 3828, 3833, 3838, 3838,
+  3842, 3847, 3852, 3859, 3858,
+  3864, 3862, 3869, 3877, 3877,
+  3883, 3888, 3894, 3898, 3902,
+  3906, 3912, 3923, 3926, 3936,
+  3942, 3946, 3960, 3972, 3979,
+  3982, 3991, 3997, 4002, 4002,
+  4012, 4018, 4028, 4043, 4057,
+  4074, 4084, 4094, 4098, 4098,
+  4109, 4115, 4123, 4134, 4142,
+  4153, 4158, 4170, 4180, 4188
   };
 */
-uint16_t SCKBase::getBattery(float Vref) {
+uint16_t SCKBase::getBattery(float Vref)
+{
   uint16_t temp = average(BAT);
 #if F_CPU == 8000000
   float voltage = Vref * temp / 1023.;
@@ -532,14 +450,8 @@ uint16_t SCKBase::getBattery(float Vref) {
   float voltage = Vref * temp / 1023.;
 #endif
   uint16_t percent = map(voltage, VAL_MIN_BATTERY, VAL_MAX_BATTERY, 0, 100) * 10;
-  /*for(uint16_t i = 0; i < 100; i++) {
-    if(voltage < batTable[i]) {
-      percent = i * 10;
-      break;
-    }
-    }*/
   if (percent > 1000) percent = 1000;
-  if (percent < 10) percent = 10;
+  else if (percent < 10) percent = 10;
 #if debugBASE
   Serial.print("Vbat: ");
   Serial.print(voltage);
@@ -551,8 +463,8 @@ uint16_t SCKBase::getBattery(float Vref) {
   return percent;
 }
 
-boolean SCKBase::findInResponse(const char *toMatch,
-                                unsigned int timeOut = 1000) {
+boolean SCKBase::findInResponse(const char *toMatch,  unsigned int timeOut = 1000)
+{
   int byteRead;
 
   unsigned long timeOutTarget; // in milliseconds
@@ -585,12 +497,11 @@ boolean SCKBase::findInResponse(const char *toMatch,
   return true;
 }
 
-void SCKBase::skipRemainderOfResponse(unsigned int timeOut) {
+void SCKBase::skipRemainderOfResponse(unsigned int timeOut) 
+{
   unsigned long time = millis();
-  while (((millis() - time) < timeOut))
-  {
-    if (Serial1.available())
-    {
+  while (((millis() - time) < timeOut)){
+    if (Serial1.available()){
       byte temp = Serial1.read();
       //Serial.write(temp);
       time = millis();
@@ -598,9 +509,8 @@ void SCKBase::skipRemainderOfResponse(unsigned int timeOut) {
   }
 }
 
-boolean SCKBase::sendCommand(const __FlashStringHelper *command,
-                             boolean isMultipartCommand = false,
-                             const char *expectedResponse = "AOK") {
+boolean SCKBase::sendCommand(const __FlashStringHelper *command, boolean isMultipartCommand = false, const char *expectedResponse = "AOK")
+{
   Serial1.print(command);
   delay(20);
   if (!isMultipartCommand) {
@@ -618,9 +528,8 @@ boolean SCKBase::sendCommand(const __FlashStringHelper *command,
   return true;
 }
 
-boolean SCKBase::sendCommand(const char *command,
-                             boolean isMultipartCommand = false,
-                             const char *expectedResponse = "AOK") {
+boolean SCKBase::sendCommand(const char *command, boolean isMultipartCommand = false, const char *expectedResponse = "AOK")
+{
   Serial1.print(command);
   delay(20);
   if (!isMultipartCommand) {
@@ -642,40 +551,39 @@ boolean SCKBase::sendCommand(const char *command,
 
 #define COMMAND_MODE_GUARD_TIME 250 // in milliseconds
 
-boolean SCKBase::enterCommandMode() {
-  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++)
-  {
+boolean SCKBase::enterCommandMode()
+{
+  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++) {
     delay(COMMAND_MODE_GUARD_TIME);
     Serial1.print(F("$$$"));
     delay(COMMAND_MODE_GUARD_TIME);
     Serial1.println();
     Serial1.println();
-    if (findInResponse("\r\n<", 1000))
-    {
+    if (findInResponse("\r\n<", 1000)){
       return true;
     }
   }
   return false;
 }
 
-
-boolean SCKBase::sleep() {
+boolean SCKBase::sleep()
+{
   enterCommandMode();
   sendCommand(F("sleep"));
 }
 
-boolean SCKBase::reset() {
+boolean SCKBase::reset()
+{
   enterCommandMode();
   sendCommand(F("factory R"), false, "Set Factory Defaults"); // Store settings
   sendCommand(F("save"), false, "Storing in config"); // Store settings
   sendCommand(F("reboot"), false, "*READY*");
 }
 
-boolean SCKBase::exitCommandMode() {
-  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++)
-  {
-    if (sendCommand(F("exit"), false, "EXIT"))
-    {
+boolean SCKBase::exitCommandMode()
+{
+  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++){
+    if (sendCommand(F("exit"), false, "EXIT")){
       return true;
     }
   }
@@ -684,11 +592,9 @@ boolean SCKBase::exitCommandMode() {
 
 boolean SCKBase::connect()
 {
-  if (!ready())
-  {
+  if (!ready()){
     if (readData(EE_ADDR_NUMBER_NETS, INTERNAL) < 1) return false;
-    if (enterCommandMode())
-    {
+    if (enterCommandMode()) {
       sendCommand(F("set comm remote 0")); // FFR Hide Hello message
       sendCommand(F("set wlan join 1")); // Disable AP mode
       sendCommand(F("set ip dhcp 1")); // Enable DHCP server
@@ -728,8 +634,7 @@ boolean SCKBase::connect()
 
 void SCKBase::APmode(char* ssid)
 {
-  if (enterCommandMode())
-  {
+  if (enterCommandMode()){
     sendCommand(F("set wlan join 7")); // Enable AP mode
     //sendCommand(F("set wlan channel <value> // Specify the channel to create network
     sendCommand(F("set wlan ssid "), true); // Set up network broadcast SSID
@@ -750,16 +655,13 @@ void SCKBase::APmode(char* ssid)
 
 boolean SCKBase::ready()
 {
-  if (!enterCommandMode())
-  {
+  if (!enterCommandMode()){
     repair();
     return (false);
   }
-  else
-  {
+  else{
     Serial1.println(F("join"));
-    if (findInResponse("Associated!", 8000))
-    {
+    if (findInResponse("Associated!", 8000)){
       skipRemainderOfResponse(3000);
       exitCommandMode();
       return (true);
@@ -770,19 +672,17 @@ boolean SCKBase::ready()
 
 boolean connected = false;
 
-boolean SCKBase::open(const char *addr, int port) {
-
+boolean SCKBase::open(const char *addr, int port)
+{
   if (connected) {
     close();
   }
-  if (enterCommandMode())
-  {
+  if (enterCommandMode()){
     sendCommand(F("open "), true);
     sendCommand(addr, true);
     Serial1.print(F(" "));
     Serial1.print(port);
-    if (sendCommand("", false, "*OPEN*"))
-    {
+    if (sendCommand("", false, "*OPEN*")){
       connected = true;
       return true;
     }
@@ -792,7 +692,8 @@ boolean SCKBase::open(const char *addr, int port) {
   return false;
 }
 
-boolean SCKBase::close() {
+boolean SCKBase::close()
+{
   if (!connected) {
     return true;
   }
@@ -806,17 +707,15 @@ boolean SCKBase::close() {
 
 #define MAC_ADDRESS_BUFFER_SIZE 18 // "FF:FF:FF:FF:FF:FF\0"
 
-char* SCKBase::MAC() {
-  if (enterCommandMode())
-  {
-    if (sendCommand(F("get mac"), false, "Mac Addr="))
-    {
+char* SCKBase::MAC()
+{
+  if (enterCommandMode()){
+    if (sendCommand(F("get mac"), false, "Mac Addr=")){
       char newChar;
       byte offset = 0;
 
       while (offset < MAC_ADDRESS_BUFFER_SIZE) {
-        if (Serial1.available())
-        {
+        if (Serial1.available()){
           newChar = Serial1.read();
           if ((newChar == '\n') || (newChar < '0')) {
             buffer[offset] = '\x00';
@@ -835,7 +734,8 @@ char* SCKBase::MAC() {
   return "-1";
 }
 
-char* SCKBase::id() {
+char* SCKBase::id()
+{
   char* temp = MAC();
   byte len = strlen(temp);
   byte j = 4;
@@ -843,8 +743,7 @@ char* SCKBase::id() {
   buffer[1] = 'C';
   buffer[2] = 'K';
   buffer[3] = '_';
-  for (byte i = 12; i < len; i++)
-  {
+  for (byte i = 12; i < len; i++){
     if (temp[i] == ':') buffer[j] = '-';
     else buffer[j] = temp[i];
     j++;
@@ -853,17 +752,15 @@ char* SCKBase::id() {
   return buffer;
 }
 
-uint32_t SCKBase::scan() {
-  if (enterCommandMode())
-  {
-    if (sendCommand(F("scan"), false, "Found "))
-    {
+uint32_t SCKBase::scan()
+{
+  if (enterCommandMode()){
+    if (sendCommand(F("scan"), false, "Found ")){
       char newChar;
       byte offset = 0;
 
       while (offset < SCAN_BUFFER_SIZE) {
-        if (Serial1.available())
-        {
+        if (Serial1.available()){
           newChar = Serial1.read();
           if ((newChar == '\r') || (newChar < '0')) {
             buffer[offset] = '\x00';
@@ -883,12 +780,11 @@ uint32_t SCKBase::scan() {
   return atol(buffer);
 }
 
-int SCKBase::checkWiFly() {
+int SCKBase::checkWiFly()
+{
   int ver = getWiFlyVersion();
-  if (ver > 0)
-  {
-    if (ver < WIFLY_LATEST_VERSION)
-    {
+  if (ver > 0){
+    if (ver < WIFLY_LATEST_VERSION){
       byte state = 1;
       if (update()); //Wifly Updated.
       else state = 2; //Update Fail.
@@ -900,17 +796,15 @@ int SCKBase::checkWiFly() {
   else return -1; //Error reading the wifi version.
 }
 
-int SCKBase::getWiFlyVersion() {
-  if (enterCommandMode())
-  {
-    if (sendCommand(F("ver"), false, "wifly-GSX Ver"))
-    {
+int SCKBase::getWiFlyVersion()
+{
+  if (enterCommandMode()){
+    if (sendCommand(F("ver"), false, "wifly-GSX Ver")){
       char newChar;
       byte offset = 0;
       boolean prevWasNumber = false;
       while (offset < 3) {
-        if (Serial1.available())
-        {
+        if (Serial1.available()){
           newChar = Serial1.read();
           if ((newChar != -1 && isdigit(newChar)) || newChar == '.') {
             if (newChar != '.') {
@@ -936,34 +830,27 @@ int SCKBase::getWiFlyVersion() {
   return 0;
 }
 
-
-boolean SCKBase::update() {
-  if (enterCommandMode())
-  {
+boolean SCKBase::update()
+{
+  if (enterCommandMode()){
     sendCommand(F(DEFAULT_WIFLY_FIRMWARE));
     delay(1000);
-    if (findInResponse("FTP OK.", 60000))
-    {
+    if (findInResponse("FTP OK.", 60000)){
       return true;
     }
   }
   else return false;
 }
 
-uint32_t baud[7] = {
-  2400, 4800, 9600, 19200, 38400, 57600, 115200
-};
+uint32_t baud[7] = {2400, 4800, 9600, 19200, 38400, 57600, 115200};
 
 void SCKBase::repair()
 {
-  if (!enterCommandMode())
-  {
+  if (!enterCommandMode()){
     boolean repair = true;
-    for (int i = 6; ((i >= 0) && repair); i--)
-    {
+    for (int i = 6; ((i >= 0) && repair); i--){
       Serial1.begin(baud[i]);
-      if (enterCommandMode())
-      {
+      if (enterCommandMode()){
         reset();
         repair = false;
       }
@@ -1023,15 +910,4 @@ void SCKBase::timer1Stop()
   TIMSK1 &= ~(_BV(TOIE1));
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
