@@ -66,10 +66,10 @@ void SCKBase::eepromCheck()
 
   //if there are hardcoded networks write them without clearing memory
   //so the user can add more networks after hardcoded one's
-#if (networks > 0)
+#if (NETWORKS > 0)
   intTemp = readData(EE_ADDR_NUMBER_NETS, INTERNAL);
-  if (intTemp < networks || intTemp > 5) writeData(EE_ADDR_NUMBER_NETS, networks, INTERNAL);
-  for (byte i = 0; i < networks; i++) {
+  if (intTemp < NETWORKS || intTemp > 5) writeData(EE_ADDR_NUMBER_NETS, NETWORKS, INTERNAL);
+  for (byte i = 0; i < NETWORKS; i++) {
     if (!compareData(readData(DEFAULT_ADDR_SSID, i, INTERNAL), mySSID[i])) writeData(DEFAULT_ADDR_SSID, i, mySSID[i], INTERNAL);
     if (!compareData(readData(DEFAULT_ADDR_PASS, i, INTERNAL), myPassword[i])) writeData(DEFAULT_ADDR_PASS, i, myPassword[i], INTERNAL);
     if (!compareData(readData(DEFAULT_ADDR_AUTH, i, INTERNAL), wifiEncript[i])) writeData(DEFAULT_ADDR_AUTH, i, wifiEncript[i], INTERNAL);
@@ -394,7 +394,7 @@ boolean SCKBase::RTCisValid(char *time)
 {
   RTCtime(time);
   //If year is 2016 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
-  if (time[0] == '2' && time[1] == '0' && time[2] == '1' && time[3] == '6') return true;
+  if (time[0] == '2' && time[1] == '0' && time[2] >= '1' && time[3] >= '6') return true;
   return false;
 }
 
