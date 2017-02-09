@@ -18,10 +18,8 @@
 
 #define SCAN_BUFFER_SIZE 4
 
-#include "Constants.h"
 #include <Arduino.h>
-
-
+#include "Constants.h"
 
 class SCKBase {
   public:

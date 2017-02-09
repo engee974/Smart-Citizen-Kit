@@ -15,7 +15,7 @@
 /*
     DEBUGGING
 */
-#define debugEnabled      true
+#define debugEnabled      false
 #define debugBASE         false
 #define debugServer       false
 #define debugAmbient      false
@@ -52,18 +52,18 @@
 
 */
 
-#define networks 0
-#if (networks > 0)
-static char* mySSID[networks]      = {
+#define NETWORKS 0
+#if (NETWORKS > 0)
+static char* mySSID[NETWORKS]      = {
   "SSID1"        , "SSID2"
 };
-static char* myPassword[networks]  = {
+static char* myPassword[NETWORKS]  = {
   "PASS1"      , "PASS2"
 };
-static char* wifiEncript[networks] = {
+static char* wifiEncript[NETWORKS] = {
   WPA2         , WPA2
 };
-static char* antennaExt[networks]  = {
+static char* antennaExt[NETWORKS]  = {
   INT_ANT      , INT_ANT
 };
 #endif
@@ -125,7 +125,7 @@ static char* antennaExt[networks]  = {
 #define MCP2               0x2F    // Direction of the mcp2 Potenciometers that control the microfone pickup
 #define bh1730             0x29    // Direction of the light sensor
 #define Temperature        0x40    // Direction of the sht21    
-#define ADXL 0x53    //ADXL345 device address
+#define ADXL               0x53    // ADXL345 device address
 #else
 #define MCP1               0x2F    // Direction of the mcp1 MICS
 #define MCP2               0x2E    // Direction of the mcp2 REGULATORS
@@ -238,11 +238,22 @@ static char* antennaExt[networks]  = {
 static char buffer[buffer_length];
 static char buffer_int[buffer_length2];
 
+#define HOSTS 2
+static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
+
+static char* ENDPTHTTP[HOSTS] = {"/add ","/communecter/element/save "};  //"/add","/ph/communecter/element/save"
+
+static char* TIMEENDPOINT[HOSTS] = {"/datetime ","/api/tool/datetime "}; //"/datetime", "/ph/api/tool/datetime"
+
+//The Authentification for communecter
+static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
+
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
-static char* WEB[8] = {
-  "data.smartcitizen.me",
-  "PUT /add HTTP/1.1\n",
-  "Host: data.smartcitizen.me \n",
+static char* WEB[6] = {
+//  "data.smartcitizen.me",
+//  "PUT /add HTTP/1.1\n",
+//  "Host: data.smartcitizen.me \n",
+  "HTTP/1.1\nHost: ",
   "User-Agent: SmartCitizen \n",
   "X-SmartCitizenMacADDR: ",
   "X-SmartCitizenApiKey: ",
@@ -251,12 +262,12 @@ static char* WEB[8] = {
 };
 
 // Time server request -  EndPoint: http://data.smartcitizen.me/datetime
-static char* WEBTIME[3] = {
-  /*Servidor de tiempo*/
-  "GET /datetime HTTP/1.1\n",
-  "Host: data.smartcitizen.me \n",
-  "User-Agent: SmartCitizen \n\n"
-};
+//static char* WEBTIME[3] = {
+//  /*Servidor de tiempo*/
+//  "GET /datetime HTTP/1.1\n",
+//  "Host: data.smartcitizen.me \n",
+//  "User-Agent: SmartCitizen \n\n"
+//};
 
 // Data JSON structure
 static char* SERVER[11] = {
