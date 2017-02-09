@@ -113,11 +113,14 @@ boolean SCKBase::checkText(char* text, char *text1)
   if (check == limit) {
     limit = strlen(text1);
     int j = 0;
-    for (j = 0; ((i < limit) && (text1[i] != 0x00)); j++) {
-      if (text1[i] == '\r') text1[j] = 0x00;
-      else text1[j] = text1[i];
+    for (j = 0; ((i < limit) && (text1[i] != 0x00)); j++)
+    {
+      //if (text1[i] == '\r') text1[j] = 0x00;
+      //else text1[j] = text1[i];
+      text1[j] = text1[i];
       i++;
     }
+    if (j < buffer_length2) text1[j] = 0x00;
     return true;
   }
   else return false;
