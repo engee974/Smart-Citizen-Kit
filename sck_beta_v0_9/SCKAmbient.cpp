@@ -112,7 +112,7 @@ byte      sensor_mode    = NORMAL;
 uint32_t  TimeUpdate   = 0;  // Sensor Readings time interval in sec.
 uint32_t  NumUpdates   = 0;  // Min. number of sensor readings before publishing
 uint32_t  nets           = 0;
-boolean sleep         = true;
+boolean sleep = true;
 uint32_t timetransmit = 0;
 uint32_t timeMICS = 0;
 boolean RTCupdatedSinceBoot = false;
@@ -122,7 +122,7 @@ void SCKAmbient::ini()
   _base.setDebugState(false);
   /*init WiFly*/
   digitalWrite(AWAKE, HIGH);
-  sensor_mode = sensor_mode = _base.readData(EE_ADDR_SENSOR_MODE, INTERNAL);  //Normal mode
+  sensor_mode = _base.readData(EE_ADDR_SENSOR_MODE, INTERNAL);  //Normal mode
   TimeUpdate = _base.readData(EE_ADDR_TIME_UPDATE, INTERNAL);    //Time between transmissions in sec.
   NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); //Number of readings before batch update
   nets = _base.readData(EE_ADDR_NUMBER_NETS, INTERNAL);
@@ -130,12 +130,12 @@ void SCKAmbient::ini()
   else sleep = true;
   if (_base.connect()) {
 #if debugEnabled
-    if (!_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+    if (_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
 #endif
 #if autoUpdateWiFly
     int report = _base.checkWiFly();
 #if debugEnabled
-    if (!_base.getDebugState()) {
+    if (_base.getDebugState()) {
       if (report == 1) Serial.println(F("Wifly Updated."));
       else if (report == 2) Serial.println(F("Update Fail."));
       else if (report == 0) Serial.println(F("WiFly up to date."));
@@ -146,16 +146,16 @@ void SCKAmbient::ini()
     if (_server->RTCupdate(time)) {
       RTCupdatedSinceBoot = true;
 #if debugEnabled
-      if (!_base.getDebugState()) Serial.println(F("RTC Updated!!"));
+      if (_base.getDebugState()) Serial.println(F("RTC Updated!!"));
 #endif
     } else {
 #if debugEnabled
-      if (!_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
+      if (_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
 #endif
     }
   } else {
 #if debugEnabled
-    if (!_base.getDebugState()) {
+    if (_base.getDebugState()) {
       Serial.print(F("Wifi conection failed!!! Using ssid: "));
       printNetWorks(DEFAULT_ADDR_SSID, false);
       Serial.print(F(" and pass: "));
@@ -759,13 +759,13 @@ void SCKAmbient::execute(boolean instant)
   if (!RTCupdatedSinceBoot && !_base.RTCisValid(time)) {
     digitalWrite(AWAKE, HIGH);
 #if debugEnabled
-    if (!_base.getDebugState()) Serial.println(F("RTC not updated!!!"));
-    if (!_base.getDebugState()) Serial.println(F("With no valid time it's useless to take readings!!"));
-    if (!_base.getDebugState()) Serial.println(F("Trying to get valid time..."));
+    if (_base.getDebugState()) Serial.println(F("RTC not updated!!!"));
+    if (_base.getDebugState()) Serial.println(F("With no valid time it's useless to take readings!!"));
+    if (_base.getDebugState()) Serial.println(F("Trying to get valid time..."));
 #endif
     if (_base.connect()) {
 #if debugEnabled
-      if (!_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+      if (_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
 #endif
       if (_server->RTCupdate(time)) {
         RTCupdatedSinceBoot = true;
@@ -774,18 +774,18 @@ void SCKAmbient::execute(boolean instant)
           digitalWrite(AWAKE, LOW);
         }
 #if debugEnabled
-        if (!_base.getDebugState()) Serial.println(F("RTC Updated!!"));
+        if (_base.getDebugState()) Serial.println(F("RTC Updated!!"));
 #endif
       }
       else {
 #if debugEnabled
-        if (!_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
+        if (_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
 #endif
       }
     }
     else {
 #if debugEnabled
-      if (!_base.getDebugState()) {
+      if (_base.getDebugState()) {
         Serial.print(F("Wifi conection failed!!! Using ssid: "));
         printNetWorks(DEFAULT_ADDR_SSID, false);
         Serial.print(F(" and pass: "));
@@ -801,10 +801,15 @@ void SCKAmbient::execute(boolean instant)
       if (!instant) timetransmit = millis();                         // Only reset timer if execute() is called by timer
       TimeUpdate = _base.readData(EE_ADDR_TIME_UPDATE, INTERNAL);    // Time between transmissions in sec.
       NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
-      if (!_base.getDebugState()) {                                                // CMD Mode False
+      if (!terminal_mode) {                                                // CMD Mode False
         updateSensors(sensor_mode);
-        if ((sensor_mode) > NOWIFI) _server->send(sleep, &wait_moment, value, time, instant);
+#if debugEnabled && debugAmbient
+        Serial.print(F("sensor_mode: "));
+        Serial.println(sensor_mode);
+#endif
+        if (sensor_mode > NOWIFI) _server->send(sleep, &wait_moment, value, time, instant);
 #if USBEnabled
+        Serial.println(F("txDebug"));
         txDebug();
 #endif
       }

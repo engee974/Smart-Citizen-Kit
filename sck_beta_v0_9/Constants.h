@@ -15,7 +15,7 @@
 /*
     DEBUGGING
 */
-#define debugEnabled      false
+#define debugEnabled      true
 #define debugBASE         false
 #define debugServer       false
 #define debugAmbient      false
@@ -241,9 +241,9 @@ static char buffer_int[buffer_length2];
 #define HOSTS 2
 static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
 
-static char* ENDPTHTTP[HOSTS] = {"/add ","/communecter/element/save "};  //"/add","/ph/communecter/element/save"
+static char* ENDPTHTTP[HOSTS] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[HOSTS] = {"/datetime ","/api/tool/datetime "}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
@@ -253,8 +253,8 @@ static char* WEB[6] = {
 //  "data.smartcitizen.me",
 //  "PUT /add HTTP/1.1\n",
 //  "Host: data.smartcitizen.me \n",
-  "HTTP/1.1\nHost: ",
-  "User-Agent: SmartCitizen \n",
+  " HTTP/1.1\nHost: ",
+  " \nUser-Agent: SmartCitizen \n",
   "X-SmartCitizenMacADDR: ",
   "X-SmartCitizenApiKey: ",
   "X-SmartCitizenVersion: ",
