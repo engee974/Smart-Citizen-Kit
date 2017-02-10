@@ -809,7 +809,6 @@ void SCKAmbient::execute(boolean instant)
 #endif
         if (sensor_mode > NOWIFI) _server->send(sleep, &wait_moment, value, time, instant);
 #if USBEnabled
-        Serial.println(F("txDebug"));
         txDebug();
 #endif
       }
