@@ -95,14 +95,14 @@ boolean SCKServer::RTCupdate(char *time_)
   return false;
 }
 
-void SCKServer::json_update(uint16_t updates, long *value, char *time, boolean isMultipart)
+void SCKServer::json_update(uint16_t updates, byte host, long *value, char *time, boolean isMultipart)
 {
 #if debugServer
   Serial.print(F("["));
 #endif
   Serial1.print(F("["));
   for (int i = 0; i < updates; i++) {
-    readFIFO();
+    readFIFO(host);
     if ((i < (updates - 1)) || (isMultipart)) {
       Serial1.print(F(","));
 #if debugServer
@@ -160,10 +160,10 @@ void SCKServer::addFIFO(long *value, char *time)
   }
 }
 
-void SCKServer::readFIFO()
+void SCKServer::readFIFO(byte host)
 {
   int i = 0;
-  int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL);
+  int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host *4), INTERNAL);
   for (i = 0; i < 9; i++) {
     Serial1.print(SERVER[i]);
     Serial1.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
@@ -182,12 +182,15 @@ void SCKServer::readFIFO()
   Serial.print(SERVER[i + 1]);
 #endif
 
-  eeaddress = eeaddress + (SENSORS) * 4 + TIME_BUFFER_SIZE;
-  if (eeaddress == _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL)) {
+  eeaddress = eeaddress + (SENSORS * 4) + TIME_BUFFER_SIZE;
+  if (host < (HOSTS - 1)){
+    _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
+  }
+  else if ( (_base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL) + (SENSORS * 4) + TIME_BUFFER_SIZE) == _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL)) {
     _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
     _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
   }
-  else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, eeaddress, INTERNAL);
+  else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host *4), eeaddress, INTERNAL);
 }
 
 #define numbers_retry 5
@@ -310,17 +313,18 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #endif
         for (byte j = 0 ; j < HOSTS; j++) {
           // post data to each host
+          updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
           int num_post = updates;
           int cycles = updates / POST_MAX;
           if (updates > POST_MAX) {
             for (int i = 0; i < cycles; i++) {
               connect(j);
-              json_update(POST_MAX, value, tmpTime, false);
+              json_update(POST_MAX, j, value, tmpTime, false);
             }
             num_post = updates - cycles * POST_MAX;
           }
           connect(j);
-          json_update(num_post, value, tmpTime, true);
+          json_update(num_post, j, value, tmpTime, true);
 #if debugEnabled
           if (_base.getDebugState()) {
             Serial.print(F("Posted to Server #"));

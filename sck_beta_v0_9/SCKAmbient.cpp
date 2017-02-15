@@ -751,7 +751,7 @@ void SCKAmbient::execute(boolean instant)
   if (terminal_mode) {                        // Telnet  (#data + *OPEN* detectado )
     sleep = false;
     digitalWrite(AWAKE, HIGH);
-    _server->json_update(0, value, time, true);
+    for (byte i = 0; i < HOSTS; i++) _server->json_update(0, i, value, time, true);
     usb_mode = false;
     terminal_mode = false;
   }
@@ -798,15 +798,11 @@ void SCKAmbient::execute(boolean instant)
   }
   else {
     if ((millis() - timetransmit) >= (unsigned long)TimeUpdate * second || instant) {
-      if (!instant) timetransmit = millis();                         // Only reset timer if execute() is called by timer
-      TimeUpdate = _base.readData(EE_ADDR_TIME_UPDATE, INTERNAL);    // Time between transmissions in sec.
-      NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
-      if (!terminal_mode) {                                                // CMD Mode False
-        updateSensors(sensor_mode);
-#if debugEnabled && debugAmbient
-        Serial.print(F("sensor_mode: "));
-        Serial.println(sensor_mode);
-#endif
+      if (!instant) timetransmit = millis();                          // Only reset timer if execute() is called by timer
+      TimeUpdate = _base.readData(EE_ADDR_TIME_UPDATE, INTERNAL);     // Time between transmissions in sec.
+      NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL);  // Number of readings before batch update
+      if (!terminal_mode) {                                           // CMD Mode False
+        updateSensors(sensor_mode);                                   // Get sensors values
         if (sensor_mode > NOWIFI) _server->send(sleep, &wait_moment, value, time, instant);
 #if USBEnabled
         txDebug();

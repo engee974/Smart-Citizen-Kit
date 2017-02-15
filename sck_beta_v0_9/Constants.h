@@ -153,17 +153,17 @@ static char* antennaExt[NETWORKS]  = {
 #define EE_ADDR_TIME_UPDATE                         32  //4BYTES Time between update and update of the sensors in seconds
 #define EE_ADDR_SENSOR_MODE                         36  //4BYTES Type sensors capture
 #define EE_ADDR_NUMBER_UPDATES                      40  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_READ_MEASURE                 44  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_WRITE_MEASURE                48  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_NETS                         52  //4BYTES Number of networks in the memory 
-#define EE_ADDR_APIKEY                              56  //32BYTES Apikey of the device
-#define EE_ADDR_MAC                                 100  //32BYTES MAC of the device
+#define EE_ADDR_NUMBER_READ_MEASURE                 44  //2 * 4BYTES Number of updates before posting
+#define EE_ADDR_NUMBER_WRITE_MEASURE                52  //4BYTES Number of updates before posting
+#define EE_ADDR_NUMBER_NETS                         56  //4BYTES Number of networks in the memory 
+#define EE_ADDR_APIKEY                              60  //32BYTES Apikey of the device
+#define EE_ADDR_MAC                                 92  //32BYTES MAC of the device
 
 // SCK WIFI SETTINGS Parameters
-#define DEFAULT_ADDR_SSID                                150  //160 BYTES
-#define DEFAULT_ADDR_PASS                                310  //160 BYTES
-#define DEFAULT_ADDR_AUTH                                470  //160 BYTES 
-#define DEFAULT_ADDR_ANTENNA                             630  //160 BYTES
+#define DEFAULT_ADDR_SSID                                132  //160 BYTES
+#define DEFAULT_ADDR_PASS                                292  //160 BYTES
+#define DEFAULT_ADDR_AUTH                                452  //160 BYTES 
+#define DEFAULT_ADDR_ANTENNA                             612  //160 BYTES
 
 
 /*
@@ -290,7 +290,7 @@ static char* SENSOR[10] = {
   "Light: ",
   "Battery: ",
   "Solar Panel: ",
-  "Carbon Monxide: ",
+  "Carbon Monoxide: ",
   "Nitrogen Dioxide: ",
   "Noise: ",
   "Wifi Spots: ",
