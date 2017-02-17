@@ -68,7 +68,10 @@ boolean SCKServer::time(char *time_)
         }
         _base.close();
       }
-      //else webtime = (webtime + 1) % HOSTS;
+    }
+    if (retry == 4 && webtime == 0) {
+      webtime = 1;
+      retry = 0;
     }
   }
   if (!ok) {
@@ -163,7 +166,7 @@ void SCKServer::addFIFO(long *value, char *time)
 void SCKServer::readFIFO(byte host)
 {
   int i = 0;
-  int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host *4), INTERNAL);
+  int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), INTERNAL);
   for (i = 0; i < 9; i++) {
     Serial1.print(SERVER[i]);
     Serial1.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
@@ -183,14 +186,14 @@ void SCKServer::readFIFO(byte host)
 #endif
 
   eeaddress = eeaddress + (SENSORS * 4) + TIME_BUFFER_SIZE;
-  if (host < (HOSTS - 1)){
+  if (host < (HOSTS - 1)) {
     _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
   }
   else if ( (_base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL) + (SENSORS * 4) + TIME_BUFFER_SIZE) == _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL)) {
     _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
     _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
   }
-  else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host *4), eeaddress, INTERNAL);
+  else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
 }
 
 #define numbers_retry 5
@@ -217,26 +220,7 @@ boolean SCKServer::update(long *value, char *time_)
   }
   return true;
 }
-/*
-  boolean SCKServer::connect()
-  {
-  int retry = 0;
-  while (true) {
-    if (_base.open(WEB[0], 80)) break;
-    else {
-      retry++;
-      if (retry >= numbers_retry) return false;
-    }
-  }
-  for (byte i = 1; i < 5; i++) Serial1.print(WEB[i]);
-  Serial1.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC ADDRESS
-  Serial1.print(WEB[5]);
-  Serial1.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL)); //Apikey
-  Serial1.print(WEB[6]);
-  Serial1.println(FirmWare); //Firmware version
-  Serial1.print(WEB[7]);
-  return true;
-  }*/
+
 boolean SCKServer::connect(byte webhost)
 {
   int retry = 0;
@@ -276,10 +260,13 @@ boolean SCKServer::connect(byte webhost)
     Serial.print(WEB[4]);
     Serial.println(FirmWare); //Firmware version
     Serial.print(WEB[5]);
+    Serial.println();
   }
 #endif
   return true;
 }
+
+
 
 void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *time, boolean instant)
 {
@@ -305,42 +292,82 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #endif
       if (update(value, time)) {
         //Update time and nets
-#if debugEnabled
-        if (_base.getDebugState()) {
-          Serial.print(F("updates = "));
-          Serial.println(updates + 1);
-        }
-#endif
-        for (byte j = 0 ; j < HOSTS; j++) {
+
+        // POST DATA
+        boolean connection_failed[HOSTS];
+        for (byte j = 0 ; j < HOSTS /*&& !connection_failed*/; j++) {
           // post data to each host
+          connection_failed[j] = false;
           updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
+#if debugEnabled
+          if (_base.getDebugState()) {
+            Serial.print(F("updates server #"));
+            Serial.print(j);
+            Serial.print(F(" = "));
+            Serial.println(updates + 1);
+          }
+#endif
           int num_post = updates;
           int cycles = updates / POST_MAX;
           if (updates > POST_MAX) {
             for (int i = 0; i < cycles; i++) {
-              connect(j);
-              json_update(POST_MAX, j, value, tmpTime, false);
+              if (connect(j)) json_update(POST_MAX, j, value, tmpTime, false);
+              else {
+                connection_failed[j] = true;
+                break; //skip all transmission
+              }
             }
             num_post = updates - cycles * POST_MAX;
           }
-          connect(j);
-          json_update(num_post, j, value, tmpTime, true);
+          if (connect(j) && !connection_failed[j]) json_update(num_post, j, value, tmpTime, true);
+          else connection_failed[j] = true;
+          if (!connection_failed[j]) {
 #if debugEnabled
-          if (_base.getDebugState()) {
-            Serial.print(F("Posted to Server #"));
-            Serial.print(j);
-            Serial.println(F("!"));
+            if (_base.getDebugState()) {
+              Serial.print(F("Posted to Server #"));
+              Serial.print(j);
+              Serial.println(F("!"));
+            }
+#endif
           }
-#endif
-        }
-      }
-      else {
+          else {
 #if debugEnabled
-        if (_base.getDebugState()) {
-          Serial.println(F("Error updating time Server..!"));
-        }
+            if (_base.getDebugState()) {
+              Serial.print(F("Connection failed to Server #"));
+              Serial.print(j);
+              Serial.println(F("!"));
+            }
 #endif
+          }
+        }
+        boolean data_stored = false;
+        for (byte j = 0 ; j < HOSTS; j++) {
+          if (!data_stored) {
+            if (connection_failed[j]) {
+              if (_base.checkRTC()) _base.RTCtime(time);
+              else time = "#";
+              addFIFO(value, time);
+              data_stored = true;
+#if debugEnabled
+              if (_base.getDebugState()) {
+                Serial.println(F("Data saved in memory"));
+              }
+#endif
+            }
+          }
+          else {
+            if (!connection_failed[j]) {
+              _base.writeData( EE_ADDR_NUMBER_READ_MEASURE + (j * 4), _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL) + SENSORS * 4 + TIME_BUFFER_SIZE, INTERNAL);
+            }
+          }
+        }
       }
+#if debugEnabled
+      else if (_base.getDebugState()) {
+        Serial.println(F("Error updating time Server..!"));
+      }
+#endif
+
 #if debugEnabled
       if (_base.getDebugState()) Serial.println(F("Old connection active. Closing..."));
 #endif

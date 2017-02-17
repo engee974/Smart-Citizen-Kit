@@ -15,12 +15,15 @@
 /*
     DEBUGGING
 */
+
 #define debugEnabled      true
-#define debugBASE         false
+#define debugBase         false
 #define debugServer       false
 #define debugAmbient      false
 
-#define TIME_BUFFER_SIZE 20
+#define TIME_BUFFER_SIZE      20
+#define SENSORS               9  //Numbers of sensors in the board
+#define EXTERNAL_EEPROM_SIZE  256000
 
 #if F_CPU == 8000000
 #define FirmWare  "1.1-0.9.4"
@@ -34,7 +37,7 @@
   WIFI AND SERVER STATICS - WiFly, Http server parameters.
 
 */
-#define autoUpdateWiFly true
+#define autoUpdateWiFly   true
 // WiFly Auth Modes
 #define OPEN   "0"
 #define WEP    "1"
@@ -146,7 +149,7 @@ static char* antennaExt[NETWORKS]  = {
 
 */
 
-#define MAX_MEMORY                                  571 //Memory size
+#define MAX_MEMORY                                  4571 //EXTERNAL_EEPROM_SIZE / ((SENSORS)*4+TIME_BUFFER_SIZE) //Memory size
 
 // SCK Configuration Parameters
 #define EE_ADDR_TIME_VERSION                        0   //32BYTES 
@@ -230,7 +233,7 @@ static char* antennaExt[NETWORKS]  = {
 #define NORMAL    2  //Nomal mode o real time
 #define ECONOMIC  3  //Economic mode, sensor gas active one time for hour
 
-#define  SENSORS 9  //Numbers of sensors in the board
+
 
 #define buffer_length         32
 #define buffer_length2        2*buffer_length
@@ -243,7 +246,7 @@ static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; /
 
 static char* ENDPTHTTP[HOSTS] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[HOSTS] = {"/datetime ","/api/tool/datetime "}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";

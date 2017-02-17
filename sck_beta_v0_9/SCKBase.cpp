@@ -49,7 +49,7 @@ void SCKBase::eepromCheck()
   char temp[17];
   strncpy(temp, MAC(), 18);
   while (compareData(temp, "-1")) {
-#if debugBASE
+#if debugBase
     Serial.println(F("Can't get MAC from Wifly!!!"));
 #endif
     strncpy(temp, MAC(), 18);
@@ -175,7 +175,7 @@ float SCKBase::readCharge()
 {
   float resistor = kr * readMCP(MCP3, 0x00) / 1000;
   float current = 1000. / (2 + ((resistor * 10) / (resistor + 10)));
-#if debugBASE
+#if debugBase
   Serial.print("Resistor : ");
   Serial.print(resistor);
   Serial.print(" kOhm, ");
@@ -193,7 +193,7 @@ void SCKBase::writeCharge(int current)
   float Rp = (1000. / current) - 2;
   float resistor = Rp * 10 / (10 - Rp);
   writeMCP(MCP3, 0x00, (uint8_t)(resistor * 1000 / kr));
-#if debugBASE
+#if debugBase
   Serial.print("Rc : ");
   Serial.print(Rp + 2);
   Serial.print(" kOhm, ");
@@ -242,7 +242,6 @@ void SCKBase::writeData(uint32_t eeaddress, long data, uint8_t location)
     if (location == EXTERNAL) writeEEPROM(eeaddress + (3 - i) , data >> (i * 8));
     else EEPROM.write(eeaddress + (3 - i), data >> (i * 8));
   }
-
 }
 
 void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t location)
@@ -412,7 +411,7 @@ uint16_t SCKBase::getPanel(float Vref)
   if (value > 500) value = value + 750; //Voltage protection diode
   else value = 0;
 #endif
-#if debugBASE
+#if debugBase
   Serial.print("Panel = ");
   Serial.print(value);
   Serial.println(" mV");
@@ -455,7 +454,7 @@ uint16_t SCKBase::getBattery(float Vref)
   uint16_t percent = map(voltage, VAL_MIN_BATTERY, VAL_MAX_BATTERY, 0, 100) * 10;
   if (percent > 1000) percent = 1000;
   else if (percent < 10) percent = 10;
-#if debugBASE
+#if debugBase
   Serial.print("Vbat: ");
   Serial.print(voltage);
   Serial.print(" mV, ");
@@ -644,7 +643,7 @@ void SCKBase::APmode(char* ssid)
     sendCommand(ssid);
 
     buffer[6] = 0x00;
-    sendCommand(F("set opt device_id "), true); // Set up network broadcast SSID
+    sendCommand(F("set opt deviceid "), true); // Set up network broadcast SSID
     sendCommand(ssid);
 
     sendCommand(F("set ip dhcp 4")); // Enable DHCP server
@@ -739,16 +738,16 @@ char* SCKBase::MAC()
 
 char* SCKBase::id()
 {
-  char* temp = MAC();
-  byte len = strlen(temp);
+  String strTemp = MAC();;
   byte j = 4;
   buffer[0] = 'S';
   buffer[1] = 'C';
   buffer[2] = 'K';
   buffer[3] = '_';
-  for (byte i = 12; i < len; i++){
-    if (temp[i] == ':') buffer[j] = '-';
-    else buffer[j] = temp[i];
+  strTemp.toUpperCase();
+  strTemp.replace(":","");
+  for (byte i = 7; i < strTemp.length(); i++){
+    buffer[j] = strTemp.charAt(i);
     j++;
   }
   buffer[j] = 0x00;
