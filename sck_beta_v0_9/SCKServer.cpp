@@ -267,7 +267,6 @@ boolean SCKServer::connect(byte webhost)
 }
 
 
-
 void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *time, boolean instant)
 {
   *wait_moment = true;
@@ -301,9 +300,8 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
           updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
 #if debugEnabled
           if (_base.getDebugState()) {
-            Serial.print(F("updates server #"));
-            Serial.print(j);
-            Serial.print(F(" = "));
+            Serial.print(HOSTADDR[j]);
+            Serial.print(F(" : updates = "));
             Serial.println(updates + 1);
           }
 #endif
@@ -324,18 +322,16 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
           if (!connection_failed[j]) {
 #if debugEnabled
             if (_base.getDebugState()) {
-              Serial.print(F("Posted to Server #"));
-              Serial.print(j);
-              Serial.println(F("!"));
+              Serial.print(HOSTADDR[j]);
+              Serial.println(F(" : Posted to Server!"));
             }
 #endif
           }
           else {
 #if debugEnabled
             if (_base.getDebugState()) {
-              Serial.print(F("Connection failed to Server #"));
-              Serial.print(j);
-              Serial.println(F("!"));
+              Serial.print(HOSTADDR[j]);
+              Serial.println(F(" : Connection failed to Server!"));
             }
 #endif
           }
