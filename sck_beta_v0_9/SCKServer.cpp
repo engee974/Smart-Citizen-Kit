@@ -149,7 +149,7 @@ void SCKServer::addFIFO(long *value, char *time)
   if (updates < MAX_MEMORY) {
     int eeaddress = _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL);
     int i = 0;
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < SENSORS; i++) {
       _base.writeData(eeaddress + i * 4, value[i], EXTERNAL);
     }
     _base.writeData(eeaddress + i * 4, 0, time, EXTERNAL);
@@ -167,7 +167,7 @@ void SCKServer::readFIFO(byte host)
 {
   int i = 0;
   int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), INTERNAL);
-  for (i = 0; i < 9; i++) {
+  for (i = 0; i < SENSORS; i++) {
     Serial1.print(SERVER[i]);
     Serial1.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
   }
@@ -176,7 +176,7 @@ void SCKServer::readFIFO(byte host)
   Serial1.print(SERVER[i + 1]);
 
 #if debugServer
-  for (i = 0; i < 9; i++) {
+  for (i = 0; i < SENSORS; i++) {
     Serial.print(SERVER[i]);
     Serial.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
   }

@@ -22,8 +22,8 @@
 #define debugAmbient      false
 
 #define TIME_BUFFER_SIZE      20
-#define SENSORS               9  //Numbers of sensors in the board
-#define EXTERNAL_EEPROM_SIZE  256000
+#define SENSORS               9     // Numbers of sensors in the board
+#define EXTERNAL_EEPROM_SIZE  32000 // Number of octets
 
 #if F_CPU == 8000000
 #define FirmWare  "1.1-0.9.4"
@@ -149,7 +149,6 @@ static char* antennaExt[NETWORKS]  = {
 
 */
 
-#define MAX_MEMORY                                  4571 //EXTERNAL_EEPROM_SIZE / ((SENSORS)*4+TIME_BUFFER_SIZE) //Memory size
 
 // SCK Configuration Parameters
 #define EE_ADDR_TIME_VERSION                        0   //32BYTES 
@@ -246,7 +245,7 @@ static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; /
 
 static char* ENDPTHTTP[HOSTS] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[HOSTS] = {"/datetime ","/api/tool/datetime "}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
