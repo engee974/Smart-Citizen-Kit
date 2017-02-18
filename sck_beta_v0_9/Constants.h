@@ -149,6 +149,7 @@ static char* antennaExt[NETWORKS]  = {
 
 */
 
+#define MAX_MEMORY                                  EXTERNAL_EEPROM_SIZE / ((SENSORS)*4+TIME_BUFFER_SIZE) //Memory size - 571 for 256kbits EEPROM
 
 // SCK Configuration Parameters
 #define EE_ADDR_TIME_VERSION                        0   //32BYTES 
