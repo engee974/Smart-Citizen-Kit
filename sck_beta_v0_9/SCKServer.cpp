@@ -21,7 +21,17 @@ boolean SCKServer::time(char *time_)
   byte webtime = 0; //0 : smartcitizen ; 1 : communecter
   while ((retry < 5) && (!ok)) {
     retry++;
+
     if (_base.enterCommandMode()) {
+#if debugServer
+      Serial.print(F("GET "));
+      Serial.print(TIMEENDPOINT[webtime]);
+      Serial.print(WEB[0]);
+      Serial.print(HOSTADDR[webtime]);
+      //Serial1.print(" ");
+      Serial.println(WEB[1]);
+      //Serial.flush();
+#endif
       if (_base.open(HOSTADDR[webtime], 80)) {
         //Requests to the server time
         Serial1.print("GET ");
@@ -72,6 +82,9 @@ boolean SCKServer::time(char *time_)
     if (retry == 4 && webtime == 0) {
       webtime = 1;
       retry = 0;
+#if debugServer
+      Serial.println(F("Trying secondary time server!"));
+#endif
     }
   }
   if (!ok) {
@@ -275,6 +288,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
   strncpy(tmpTime, time, 20);
   uint16_t updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
   uint16_t NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
+  Serial.flush();
   Serial.print(F("Updates: "));
   Serial.println(updates);
   if (updates >= (NumUpdates - 1) || instant) {
@@ -298,7 +312,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
           // post data to each host
           connection_failed[j] = false;
           updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
-#if debugEnabled
+#if debugEnabled && debugServer
           if (_base.getDebugState()) {
             Serial.print(HOSTADDR[j]);
             Serial.print(F(" : updates = "));

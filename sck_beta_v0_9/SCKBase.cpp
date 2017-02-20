@@ -247,11 +247,11 @@ void SCKBase::writeData(uint32_t eeaddress, long data, uint8_t location)
 void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t location)
 {
   uint16_t eeaddressfree = eeaddress + buffer_length * pos;
-  if (location == EXTERNAL){
+  if (location == EXTERNAL) {
     for (uint16_t i = eeaddressfree; i < (eeaddressfree + buffer_length); i++) writeEEPROM(i, 0x00);
     for (uint16_t i = eeaddressfree; text[i - eeaddressfree] != 0x00; i++) writeEEPROM(i, text[i - eeaddressfree]);
   }
-  else{
+  else {
     for (uint16_t i = eeaddressfree; i < (eeaddressfree + buffer_length); i++) EEPROM.write(i, 0x00);
     for (uint16_t i = eeaddressfree; text[i - eeaddressfree] != 0x00; i++) {
       if (eeaddressfree >= DEFAULT_ADDR_SSID) if (text[i - eeaddressfree] == ' ') text[i - eeaddressfree] = '$';
@@ -263,7 +263,7 @@ void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t lo
 uint32_t SCKBase::readData(uint16_t eeaddress, uint8_t location)
 {
   uint32_t data = 0;
-  for (int i = 0; i < 4; i++){
+  for (int i = 0; i < 4; i++) {
     if (location == EXTERNAL)  data = data + (uint32_t)((uint32_t)readEEPROM(eeaddress + i) << ((3 - i) * 8));
     else data = data + (uint32_t)((uint32_t)EEPROM.read(eeaddress + i) << ((3 - i) * 8));
   }
@@ -274,16 +274,16 @@ char* SCKBase::readData(uint16_t eeaddress, uint16_t pos, uint8_t location)
 {
   eeaddress = eeaddress + buffer_length * pos;
   uint16_t i;
-  if (location == EXTERNAL){
+  if (location == EXTERNAL) {
     uint8_t temp = readEEPROM(eeaddress);
-    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++){
+    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++) {
       buffer[i - eeaddress] = readEEPROM(i);
       temp = readEEPROM(i + 1);
     }
   }
-  else{
+  else {
     uint8_t temp = EEPROM.read(eeaddress);
-    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++){
+    for ( i = eeaddress; ((temp != 0x00) && (temp < 0x7E) && (temp > 0x1F) && ((i - eeaddress) < buffer_length)); i++) {
       buffer[i - eeaddress] = EEPROM.read(i);
       temp = EEPROM.read(i + 1);
     }
@@ -310,17 +310,17 @@ boolean SCKBase::RTCadjust(char *time)
   byte rtc[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   byte count = 0x00;
   byte data_count = 0;
-  while (time[count] != 0x00){
+  while (time[count] != 0x00) {
     if (time[count] == '-') data_count++;
     else if (time[count] == ' ') data_count++;
     else if (time[count] == ':') data_count++;
-    else if ((time[count] >= '0') && (time[count] <= '9')){
+    else if ((time[count] >= '0') && (time[count] <= '9')) {
       rtc[data_count] = (rtc[data_count] << 4) | (0x0F & time[count]);
     }
     else break;
     count++;
   }
-  if (data_count == 5){
+  if (data_count == 5) {
 #if F_CPU == 8000000
     Wire.beginTransmission(RTC_ADDRESS);
     Wire.write((int)0);
@@ -499,11 +499,11 @@ boolean SCKBase::findInResponse(const char *toMatch,  unsigned int timeOut = 100
   return true;
 }
 
-void SCKBase::skipRemainderOfResponse(unsigned int timeOut) 
+void SCKBase::skipRemainderOfResponse(unsigned int timeOut)
 {
   unsigned long time = millis();
-  while (((millis() - time) < timeOut)){
-    if (Serial1.available()){
+  while (((millis() - time) < timeOut)) {
+    if (Serial1.available()) {
       byte temp = Serial1.read();
       //Serial.write(temp);
       time = millis();
@@ -561,7 +561,7 @@ boolean SCKBase::enterCommandMode()
     delay(COMMAND_MODE_GUARD_TIME);
     Serial1.println();
     Serial1.println();
-    if (findInResponse("\r\n<", 1000)){
+    if (findInResponse("\r\n<", 1000)) {
       return true;
     }
   }
@@ -584,8 +584,8 @@ boolean SCKBase::reset()
 
 boolean SCKBase::exitCommandMode()
 {
-  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++){
-    if (sendCommand(F("exit"), false, "EXIT")){
+  for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++) {
+    if (sendCommand(F("exit"), false, "EXIT")) {
       return true;
     }
   }
@@ -594,10 +594,11 @@ boolean SCKBase::exitCommandMode()
 
 boolean SCKBase::connect()
 {
-  if (!ready()){
+  if (!ready()) {
     if (readData(EE_ADDR_NUMBER_NETS, INTERNAL) < 1) return false;
     if (enterCommandMode()) {
       sendCommand(F("set comm remote 0")); // FFR Hide Hello message
+      sendCommand(F("set wlan rate 15"));
       sendCommand(F("set wlan join 1")); // Disable AP mode
       sendCommand(F("set ip dhcp 1")); // Enable DHCP server
       sendCommand(F("set ip proto 10")); //TCP mode and HTML mode
@@ -636,7 +637,7 @@ boolean SCKBase::connect()
 
 void SCKBase::APmode(char* ssid)
 {
-  if (enterCommandMode()){
+  if (enterCommandMode()) {
     sendCommand(F("set wlan join 7")); // Enable AP mode
     //sendCommand(F("set wlan channel <value> // Specify the channel to create network
     sendCommand(F("set wlan ssid "), true); // Set up network broadcast SSID
@@ -657,13 +658,13 @@ void SCKBase::APmode(char* ssid)
 
 boolean SCKBase::ready()
 {
-  if (!enterCommandMode()){
+  if (!enterCommandMode()) {
     repair();
     return (false);
   }
-  else{
+  else {
     Serial1.println(F("join"));
-    if (findInResponse("Associated!", 8000)){
+    if (findInResponse("Associated!", 8000)) {
       skipRemainderOfResponse(3000);
       exitCommandMode();
       return (true);
@@ -679,12 +680,12 @@ boolean SCKBase::open(const char *addr, int port)
   if (connected) {
     close();
   }
-  if (enterCommandMode()){
+  if (enterCommandMode()) {
     sendCommand(F("open "), true);
     sendCommand(addr, true);
     Serial1.print(F(" "));
     Serial1.print(port);
-    if (sendCommand("", false, "*OPEN*")){
+    if (sendCommand("", false, "*OPEN*")) {
       connected = true;
       return true;
     }
@@ -711,13 +712,13 @@ boolean SCKBase::close()
 
 char* SCKBase::MAC()
 {
-  if (enterCommandMode()){
-    if (sendCommand(F("get mac"), false, "Mac Addr=")){
+  if (enterCommandMode()) {
+    if (sendCommand(F("get mac"), false, "Mac Addr=")) {
       char newChar;
       byte offset = 0;
 
       while (offset < MAC_ADDRESS_BUFFER_SIZE) {
-        if (Serial1.available()){
+        if (Serial1.available()) {
           newChar = Serial1.read();
           if ((newChar == '\n') || (newChar < '0')) {
             buffer[offset] = '\x00';
@@ -745,8 +746,8 @@ char* SCKBase::id()
   buffer[2] = 'K';
   buffer[3] = '_';
   strTemp.toUpperCase();
-  strTemp.replace(":","");
-  for (byte i = 7; i < strTemp.length(); i++){
+  strTemp.replace(":", "");
+  for (byte i = 7; i < strTemp.length(); i++) {
     buffer[j] = strTemp.charAt(i);
     j++;
   }
@@ -756,13 +757,13 @@ char* SCKBase::id()
 
 uint32_t SCKBase::scan()
 {
-  if (enterCommandMode()){
-    if (sendCommand(F("scan"), false, "Found ")){
+  if (enterCommandMode()) {
+    if (sendCommand(F("scan"), false, "Found ")) {
       char newChar;
       byte offset = 0;
 
       while (offset < SCAN_BUFFER_SIZE) {
-        if (Serial1.available()){
+        if (Serial1.available()) {
           newChar = Serial1.read();
           if ((newChar == '\r') || (newChar < '0')) {
             buffer[offset] = '\x00';
@@ -785,8 +786,8 @@ uint32_t SCKBase::scan()
 int SCKBase::checkWiFly()
 {
   int ver = getWiFlyVersion();
-  if (ver > 0){
-    if (ver < WIFLY_LATEST_VERSION){
+  if (ver > 0) {
+    if (ver < WIFLY_LATEST_VERSION) {
       byte state = 1;
       if (update()); //Wifly Updated.
       else state = 2; //Update Fail.
@@ -800,13 +801,13 @@ int SCKBase::checkWiFly()
 
 int SCKBase::getWiFlyVersion()
 {
-  if (enterCommandMode()){
-    if (sendCommand(F("ver"), false, "wifly-GSX Ver")){
+  if (enterCommandMode()) {
+    if (sendCommand(F("ver"), false, "wifly-GSX Ver")) {
       char newChar;
       byte offset = 0;
       boolean prevWasNumber = false;
       while (offset < 3) {
-        if (Serial1.available()){
+        if (Serial1.available()) {
           newChar = Serial1.read();
           if ((newChar != -1 && isdigit(newChar)) || newChar == '.') {
             if (newChar != '.') {
@@ -834,10 +835,10 @@ int SCKBase::getWiFlyVersion()
 
 boolean SCKBase::update()
 {
-  if (enterCommandMode()){
+  if (enterCommandMode()) {
     sendCommand(F(DEFAULT_WIFLY_FIRMWARE));
     delay(1000);
-    if (findInResponse("FTP OK.", 60000)){
+    if (findInResponse("FTP OK.", 60000)) {
       return true;
     }
   }
@@ -848,11 +849,11 @@ uint32_t baud[7] = {2400, 4800, 9600, 19200, 38400, 57600, 115200};
 
 void SCKBase::repair()
 {
-  if (!enterCommandMode()){
+  if (!enterCommandMode()) {
     boolean repair = true;
-    for (int i = 6; ((i >= 0) && repair); i--){
+    for (int i = 6; ((i >= 0) && repair); i--) {
       Serial1.begin(baud[i]);
-      if (enterCommandMode()){
+      if (enterCommandMode()) {
         reset();
         repair = false;
       }
