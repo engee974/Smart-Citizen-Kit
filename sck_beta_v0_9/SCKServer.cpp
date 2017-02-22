@@ -19,19 +19,22 @@ boolean SCKServer::time(char *time_)
   uint8_t count = 0;
   byte retry = 0;
   byte webtime = 0; //0 : smartcitizen ; 1 : communecter
-  while ((retry < 5) && (!ok)) {
+  while ((retry < 6) && (!ok)) {
+    webtime = retry % HOSTS;
     retry++;
 
     if (_base.enterCommandMode()) {
-#if debugServer
-      Serial.print(F("GET "));
-      Serial.print(TIMEENDPOINT[webtime]);
-      Serial.print(WEB[0]);
-      Serial.print(HOSTADDR[webtime]);
-      //Serial1.print(" ");
-      Serial.println(WEB[1]);
-      //Serial.flush();
-#endif
+      /*
+        #if debugServer
+        Serial.print(F("GET "));
+        Serial.print(TIMEENDPOINT[webtime]);
+        Serial.print(WEB[0]);
+        Serial.print(HOSTADDR[webtime]);
+        //Serial1.print(" ");
+        Serial.println(WEB[1]);
+        //Serial.flush();
+        #endif
+      */
       if (_base.open(HOSTADDR[webtime], 80)) {
         //Requests to the server time
         Serial1.print("GET ");
@@ -78,13 +81,6 @@ boolean SCKServer::time(char *time_)
         }
         _base.close();
       }
-    }
-    if (retry == 4 && webtime == 0) {
-      webtime = 1;
-      retry = 0;
-#if debugServer
-      Serial.println(F("Trying secondary time server!"));
-#endif
     }
   }
   if (!ok) {
@@ -179,34 +175,62 @@ void SCKServer::addFIFO(long *value, char *time)
 void SCKServer::readFIFO(byte host)
 {
   int i = 0;
-  int eeaddress = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), INTERNAL);
+  int eeaddressread = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), INTERNAL);
   for (i = 0; i < SENSORS; i++) {
     Serial1.print(SERVER[i]);
-    Serial1.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
+    Serial1.print(_base.readData(eeaddressread + i * 4, EXTERNAL)); //SENSORS
   }
   Serial1.print(SERVER[i]);
-  Serial1.print(_base.readData(eeaddress + i * 4, 0, EXTERNAL)); //TIME
+  Serial1.print(_base.readData(eeaddressread + i * 4, 0, EXTERNAL)); //TIME
   Serial1.print(SERVER[i + 1]);
 
 #if debugServer
   for (i = 0; i < SENSORS; i++) {
     Serial.print(SERVER[i]);
-    Serial.print(_base.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
+    Serial.print(_base.readData(eeaddressread + i * 4, EXTERNAL)); //SENSORS
   }
   Serial.print(SERVER[i]);
-  Serial.print(_base.readData(eeaddress + i * 4, 0, EXTERNAL)); //TIME
+  Serial.print(_base.readData(eeaddressread + i * 4, 0, EXTERNAL)); //TIME
   Serial.print(SERVER[i + 1]);
 #endif
+  int eeaddresswrite = _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL);
+#if debugServer
+  Serial.print(F("\nWrite Address : "));
+  Serial.println(eeaddresswrite);
+#endif
+  /*
+    eeaddressread = eeaddressread + (SENSORS * 4) + TIME_BUFFER_SIZE; // Next Measure to read
+    if (host < (HOSTS - 1)) {
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
+    }
+    else if ( (_base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL) + (SENSORS * 4) + TIME_BUFFER_SIZE) == eeaddresswrite) {
+      _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
+    }
+    else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
+  */
+  // Set the Next address to read
+  eeaddressread = eeaddressread + (SENSORS * 4) + TIME_BUFFER_SIZE;
+  _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddressread, INTERNAL);
+#if debugServer
+  Serial.print(F("Next Address : "));
+  Serial.println(eeaddressread);
+#endif
+  boolean sameNextMeasure = true;
+  for (i = 0; i < (HOSTS - 1) && sameNextMeasure; i++) {
+    if (_base.readData(EE_ADDR_NUMBER_READ_MEASURE + (i * 4), INTERNAL) != _base.readData(EE_ADDR_NUMBER_READ_MEASURE + ((i + 1) * 4), INTERNAL)) sameNextMeasure = false;
+  }
+  if (sameNextMeasure) {
+    // Move data in EEPROM
+    for (i = eeaddressread; i < eeaddresswrite; i += (SENSORS * 4) + TIME_BUFFER_SIZE) {
+      _base.writeData(i - eeaddressread, _base.readData(i, EXTERNAL), EXTERNAL);
+    }
+    for (i = 0; i < HOSTS ; i++) {
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE  + (i * 4), 0, INTERNAL);
+    }
+    _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, eeaddresswrite - eeaddressread, INTERNAL);
+  }
 
-  eeaddress = eeaddress + (SENSORS * 4) + TIME_BUFFER_SIZE;
-  if (host < (HOSTS - 1)) {
-    _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
-  }
-  else if ( (_base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL) + (SENSORS * 4) + TIME_BUFFER_SIZE) == _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL)) {
-    _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
-    _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
-  }
-  else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
 }
 
 #define numbers_retry 5
@@ -258,8 +282,9 @@ boolean SCKServer::connect(byte webhost)
   Serial1.print(WEB[4]);
   Serial1.println(FirmWare); //Firmware version
   Serial1.print(WEB[5]);
-#if debugEnabled && debugServer
-  if (_base.getDebugState()) {
+  /*
+    #if debugEnabled && debugServer
+    if (_base.getDebugState()) {
     Serial.print(F("PUT "));
     Serial.print(ENDPTHTTP[webhost]); // in Constants
     Serial.print(WEB[0]);
@@ -274,8 +299,9 @@ boolean SCKServer::connect(byte webhost)
     Serial.println(FirmWare); //Firmware version
     Serial.print(WEB[5]);
     Serial.println();
-  }
-#endif
+    }
+    #endif
+  */
   return true;
 }
 
@@ -352,10 +378,10 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
         }
         boolean data_stored = false;
         for (byte j = 0 ; j < HOSTS; j++) {
-          if (!data_stored) {
-            if (connection_failed[j]) {
-              if (_base.checkRTC()) _base.RTCtime(time);
-              else time = "#";
+          if (connection_failed[j]) {
+            if (_base.checkRTC()) _base.RTCtime(time);
+            else time = "#";
+            if (!data_stored) {
               addFIFO(value, time);
               data_stored = true;
 #if debugEnabled
@@ -365,10 +391,8 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #endif
             }
           }
-          else {
-            if (!connection_failed[j]) {
-              _base.writeData( EE_ADDR_NUMBER_READ_MEASURE + (j * 4), _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL) + SENSORS * 4 + TIME_BUFFER_SIZE, INTERNAL);
-            }
+          else if (data_stored) {
+            _base.writeData( EE_ADDR_NUMBER_READ_MEASURE + (j * 4), _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL) + SENSORS * 4 + TIME_BUFFER_SIZE, INTERNAL);
           }
         }
       }

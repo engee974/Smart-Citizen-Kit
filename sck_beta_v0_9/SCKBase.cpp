@@ -605,25 +605,25 @@ boolean SCKBase::connect()
       sendCommand(F(DEFAULT_WIFLY_FTP_UPDATE)); //ftp server update
       sendCommand(F("set ftp mode 1"));
       char* auth;
-      char* ssid;
-      char* pass;
-      char* antenna;
+      //char* ssid;
+      //char* pass;
+      //char* antenna;
       for (uint16_t nets = 0  ; nets < readData(EE_ADDR_NUMBER_NETS, INTERNAL); nets++) {
         auth = readData(DEFAULT_ADDR_AUTH, nets, INTERNAL);
         sendCommand(F("set wlan auth "), true);
         sendCommand(auth);
         boolean mode = true;
         if ((auth == WEP) || (auth == WEP64)) mode = false;
-        ssid = readData(DEFAULT_ADDR_SSID, nets, INTERNAL);
+        //ssid = readData(DEFAULT_ADDR_SSID, nets, INTERNAL);
         sendCommand(F("set wlan ssid "), true);
-        sendCommand(ssid);
-        pass = readData(DEFAULT_ADDR_PASS, nets, INTERNAL);
+        sendCommand(readData(DEFAULT_ADDR_SSID, nets, INTERNAL));
+        //pass = readData(DEFAULT_ADDR_PASS, nets, INTERNAL);
         if (mode) sendCommand(F("set wlan phrase "), true);  // WPA1, WPA2, OPEN
         else sendCommand(F("set wlan key "), true);
-        sendCommand(pass);
-        antenna = readData(DEFAULT_ADDR_ANTENNA, nets, INTERNAL);
+        sendCommand(readData(DEFAULT_ADDR_PASS, nets, INTERNAL));
+        //antenna = readData(DEFAULT_ADDR_ANTENNA, nets, INTERNAL);
         sendCommand(F("set wlan ext_antenna "), true);
-        sendCommand(antenna);
+        sendCommand(readData(DEFAULT_ADDR_ANTENNA, nets, INTERNAL));
         sendCommand(F("save"), false, "Storing in config"); // Store settings
         sendCommand(F("reboot"), false, "*READY*");
         if (ready()) return true;

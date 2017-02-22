@@ -932,7 +932,7 @@ void SCKAmbient::serialRequests()
         Serial.println(F("AOK"));
       }
       else if (_base.checkText("exit", buffer_int)) {
-        Serial.println(F("EXIT"));
+        Serial.println(F("\nEXIT"));
         serial_bridge = false;
         sensor_mode = temp_mode;
         _base.setDebugState(false);
