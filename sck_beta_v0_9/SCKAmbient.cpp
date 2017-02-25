@@ -130,7 +130,7 @@ void SCKAmbient::ini()
   else sleep = true;
   if (_base.connect()) {
 #if debugEnabled
-    if (_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+    if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
 #endif
 #if autoUpdateWiFly
     int report = _base.checkWiFly();
@@ -765,7 +765,7 @@ void SCKAmbient::execute(boolean instant)
 #endif
     if (_base.connect()) {
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+      if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
 #endif
       if (_server->RTCupdate(time)) {
         RTCupdatedSinceBoot = true;

@@ -483,8 +483,10 @@ boolean SCKBase::findInResponse(const char *toMatch,  unsigned int timeOut = 100
       delay(1); // This seems to improve reliability slightly
     }
     byteRead = Serial1.read();
-    //Serial.print((char)byteRead);
-    delay(1); // Removing logging may affect timing slightly
+#if debugServer
+    Serial.print((char)byteRead);
+#endif
+    //delay(1); // Removing logging may affect timing slightly
 
     if (byteRead != toMatch[offset]) {
       offset = 0;
@@ -556,12 +558,12 @@ boolean SCKBase::sendCommand(const char *command, boolean isMultipartCommand = f
 boolean SCKBase::enterCommandMode()
 {
   for (int retryCount = 0; retryCount < COMMAND_MODE_ENTER_RETRY_ATTEMPTS; retryCount++) {
-    delay(COMMAND_MODE_GUARD_TIME);
     Serial1.print(F("$$$"));
     delay(COMMAND_MODE_GUARD_TIME);
     Serial1.println();
     Serial1.println();
-    if (findInResponse("\r\n<", 1000)) {
+    //if (findInResponse("\r\n<", 1000)) {
+    if (findInResponse(">", 1000)) {
       return true;
     }
   }
@@ -660,17 +662,16 @@ boolean SCKBase::ready()
 {
   if (!enterCommandMode()) {
     repair();
-    return (false);
+    return false;
   }
   else {
     Serial1.println(F("join"));
     if (findInResponse("Associated!", 8000)) {
       skipRemainderOfResponse(3000);
       exitCommandMode();
-      return (true);
+      return true;
     }
   }
-
 }
 
 boolean connected = false;
@@ -691,7 +692,7 @@ boolean SCKBase::open(const char *addr, int port)
     }
     else return false;
   }
-  enterCommandMode();
+  //enterCommandMode();
   return false;
 }
 
@@ -722,6 +723,7 @@ char* SCKBase::MAC()
           newChar = Serial1.read();
           if ((newChar == '\n') || (newChar < '0')) {
             buffer[offset] = '\x00';
+            exitCommandMode();
             return buffer;
           }
           else if (newChar != -1) {
@@ -731,7 +733,6 @@ char* SCKBase::MAC()
         }
       }
       buffer[MAC_ADDRESS_BUFFER_SIZE - 1] = '\x00';
-      exitCommandMode();
     }
   }
   return "-1";
@@ -765,6 +766,9 @@ uint32_t SCKBase::scan()
       while (offset < SCAN_BUFFER_SIZE) {
         if (Serial1.available()) {
           newChar = Serial1.read();
+#if debugBase
+          Serial.print(newChar);
+#endif
           if ((newChar == '\r') || (newChar < '0')) {
             buffer[offset] = '\x00';
             break;
@@ -777,8 +781,8 @@ uint32_t SCKBase::scan()
       }
       buffer[SCAN_BUFFER_SIZE - 1] = '\x00';
       findInResponse("END:\r\n", 2000);
-      exitCommandMode();
     }
+    exitCommandMode();
   }
   return atol(buffer);
 }
@@ -802,7 +806,7 @@ int SCKBase::checkWiFly()
 int SCKBase::getWiFlyVersion()
 {
   if (enterCommandMode()) {
-    if (sendCommand(F("ver"), false, "wifly-GSX Ver")) {
+    if (sendCommand(F("ver"), false, "wifly-GSX Ver: ")) {
       char newChar;
       byte offset = 0;
       boolean prevWasNumber = false;
@@ -824,8 +828,8 @@ int SCKBase::getWiFlyVersion()
           }
         }
       }
-      exitCommandMode();
       buffer[offset] = 0x00;
+      exitCommandMode();
       return atoi(buffer);
     }
     return 0;
@@ -841,6 +845,7 @@ boolean SCKBase::update()
     if (findInResponse("FTP OK.", 60000)) {
       return true;
     }
+    exitCommandMode();
   }
   else return false;
 }

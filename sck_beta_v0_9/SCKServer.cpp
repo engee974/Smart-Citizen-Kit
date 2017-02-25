@@ -23,18 +23,18 @@ boolean SCKServer::time(char *time_)
     webtime = retry % HOSTS;
     retry++;
 
-    if (_base.enterCommandMode()) {
-      /*
-        #if debugServer
-        Serial.print(F("GET "));
-        Serial.print(TIMEENDPOINT[webtime]);
-        Serial.print(WEB[0]);
-        Serial.print(HOSTADDR[webtime]);
-        //Serial1.print(" ");
-        Serial.println(WEB[1]);
-        //Serial.flush();
-        #endif
-      */
+    //if (_base.enterCommandMode()) {
+    if (_base.ready()) {
+#if debugServer
+      Serial.print(F("GET "));
+      Serial.print(TIMEENDPOINT[webtime]);
+      Serial.print(WEB[0]);
+      Serial.print(HOSTADDR[webtime]);
+      //Serial1.print(" ");
+      Serial.println(WEB[1]);
+      //Serial.flush();
+#endif
+
       if (_base.open(HOSTADDR[webtime], 80)) {
         //Requests to the server time
         Serial1.print("GET ");
@@ -44,40 +44,45 @@ boolean SCKServer::time(char *time_)
         Serial1.print(" ");
         Serial1.print(WEB[1]);
         Serial1.print("\n");
-        if (_base.findInResponse("UTC:", 2000)) {
-          char newChar;
-          byte offset = 0;
-          unsigned long time = millis();
-          while (offset < TIME_BUFFER_SIZE) {
-            if (Serial1.available()) {
-              newChar = Serial1.read();
-              time = millis();
-              if (newChar == '#') {
-                ok = true;
-                time_[offset] = '\x00';
+        if (_base.findInResponse(WEB200OK, 2000)) {
+          if (_base.findInResponse("UTC:", 2000)) {
+            char newChar;
+            byte offset = 0;
+            unsigned long time = millis();
+            while (offset < TIME_BUFFER_SIZE) {
+              if (Serial1.available()) {
+                newChar = Serial1.read();
+#if debugServer
+                Serial.print(newChar);
+#endif
+                time = millis();
+                if (newChar == '#') {
+                  ok = true;
+                  time_[offset] = '\x00';
+                  break;
+                }
+                else if (newChar != -1) {
+                  if (newChar == ',') {
+                    if (count < 2) time_[offset] = '-';
+                    else if (count > 2) time_[offset] = ':';
+                    else time_[offset] = ' ';
+                    count++;
+                  }
+                  else time_[offset] = newChar;
+                  offset++;
+                }
+              }
+              else if ((millis() - time) > 2000) {
+                ok = false;
                 break;
               }
-              else if (newChar != -1) {
-                if (newChar == ',') {
-                  if (count < 2) time_[offset] = '-';
-                  else if (count > 2) time_[offset] = ':';
-                  else time_[offset] = ' ';
-                  count++;
-                }
-                else time_[offset] = newChar;
-                offset++;
-              }
-            }
-            else if ((millis() - time) > 1000) {
-              ok = false;
-              break;
             }
           }
-        }
-        else {
+          else {
 #if debugServer
-          Serial.println("FAIL:(");
+            Serial.println("FAIL:(");
 #endif
+          }
         }
         _base.close();
       }
@@ -87,7 +92,7 @@ boolean SCKServer::time(char *time_)
     time_[0] = '#';
     time_[1] = 0x00;
   }
-  _base.exitCommandMode();
+  //_base.exitCommandMode();
   return ok;
 }
 
@@ -282,9 +287,9 @@ boolean SCKServer::connect(byte webhost)
   Serial1.print(WEB[4]);
   Serial1.println(FirmWare); //Firmware version
   Serial1.print(WEB[5]);
-  /*
-    #if debugEnabled && debugServer
-    if (_base.getDebugState()) {
+
+#if debugServer
+  if (_base.getDebugState()) {
     Serial.print(F("PUT "));
     Serial.print(ENDPTHTTP[webhost]); // in Constants
     Serial.print(WEB[0]);
@@ -299,9 +304,11 @@ boolean SCKServer::connect(byte webhost)
     Serial.println(FirmWare); //Firmware version
     Serial.print(WEB[5]);
     Serial.println();
-    }
-    #endif
-  */
+  }
+#endif
+
+  //if (_base.findInResponse(WEB200OK, 2000)) return true;
+  //return false;
   return true;
 }
 
@@ -320,14 +327,16 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
   if (updates >= (NumUpdates - 1) || instant) {
     if (sleep) {
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("SCK Waking up..."));
+      if (_base.getDebugState()) {
+        Serial.println(F("SCK Waking up..."));
+      }
 #endif
       digitalWrite(AWAKE, HIGH);
     }
     if (_base.connect()) {
       //Wifi connect
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+      if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
 #endif
       if (update(value, time)) {
         //Update time and nets
@@ -359,7 +368,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
           }
           if (connect(j) && !connection_failed[j]) json_update(num_post, j, value, tmpTime, true);
           else connection_failed[j] = true;
-          if (!connection_failed[j]) {
+          if (!connection_failed[j] && _base.findInResponse(WEB200OK, 2000)) {
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
@@ -368,10 +377,11 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #endif
           }
           else {
+            connection_failed[j] = true;
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
-              Serial.println(F(" : Connection failed to Server!"));
+              Serial.println(F(" : NOT Posted to Server!"));
             }
 #endif
           }
@@ -424,9 +434,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
     if (sleep) {
       _base.sleep();
 #if debugEnabled
-      if (_base.getDebugState()) {
-        Serial.println(F("SCK Sleeping"));
-      }
+      if (_base.getDebugState()) Serial.println(F("SCK Sleeping"));
 #endif
       digitalWrite(AWAKE, LOW);
     }

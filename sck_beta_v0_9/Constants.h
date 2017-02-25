@@ -18,7 +18,7 @@
 
 #define debugEnabled      true
 #define debugBase         false
-#define debugServer       false
+#define debugServer       true
 #define debugAmbient      false
 
 #define TIME_BUFFER_SIZE      20
@@ -271,6 +271,8 @@ static char* WEB[6] = {
 //  "Host: data.smartcitizen.me \n",
 //  "User-Agent: SmartCitizen \n\n"
 //};
+
+static char* WEB200OK = "HTTP/1.1 200 OK";
 
 // Data JSON structure
 static char* SERVER[11] = {
