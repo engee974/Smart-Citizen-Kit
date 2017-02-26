@@ -485,9 +485,9 @@ boolean SCKBase::findInResponse(const char *toMatch,  unsigned int timeOut = 100
     byteRead = Serial1.read();
 #if debugServer
     Serial.print((char)byteRead);
+#else
+    delay(1); // Removing logging may affect timing slightly
 #endif
-    //delay(1); // Removing logging may affect timing slightly
-
     if (byteRead != toMatch[offset]) {
       offset = 0;
       // Ignore character read if it's not a match for the start of the string

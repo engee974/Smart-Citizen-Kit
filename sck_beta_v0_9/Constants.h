@@ -18,7 +18,7 @@
 
 #define debugEnabled      true
 #define debugBase         false
-#define debugServer       true
+#define debugServer       false
 #define debugAmbient      false
 
 #define TIME_BUFFER_SIZE      20

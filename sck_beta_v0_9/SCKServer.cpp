@@ -25,25 +25,24 @@ boolean SCKServer::time(char *time_)
 
     //if (_base.enterCommandMode()) {
     if (_base.ready()) {
-#if debugServer
-      Serial.print(F("GET "));
-      Serial.print(TIMEENDPOINT[webtime]);
-      Serial.print(WEB[0]);
-      Serial.print(HOSTADDR[webtime]);
-      //Serial1.print(" ");
-      Serial.println(WEB[1]);
-      //Serial.flush();
-#endif
-
       if (_base.open(HOSTADDR[webtime], 80)) {
         //Requests to the server time
         Serial1.print("GET ");
         Serial1.print(TIMEENDPOINT[webtime]);
         Serial1.print(WEB[0]);
         Serial1.print(HOSTADDR[webtime]);
-        Serial1.print(" ");
+        //Serial1.print(" ");
         Serial1.print(WEB[1]);
-        Serial1.print("\n");
+        Serial1.println(F(""));
+#if debugServer
+        Serial.print(F("GET "));
+        Serial.print(TIMEENDPOINT[webtime]);
+        Serial.print(WEB[0]);
+        Serial.print(HOSTADDR[webtime]);
+        //Serial1.print(" ");
+        Serial.println(WEB[1]);
+        Serial.flush();
+#endif
         if (_base.findInResponse(WEB200OK, 2000)) {
           if (_base.findInResponse("UTC:", 2000)) {
             char newChar;
@@ -367,8 +366,8 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
             num_post = updates - cycles * POST_MAX;
           }
           if (connect(j) && !connection_failed[j]) json_update(num_post, j, value, tmpTime, true);
-          else connection_failed[j] = true;
-          if (!connection_failed[j] && _base.findInResponse(WEB200OK, 2000)) {
+          else connection_failed[j] = true;          
+          if (!connection_failed[j]) {
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
@@ -377,7 +376,6 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #endif
           }
           else {
-            connection_failed[j] = true;
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
